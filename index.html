@@ -150,6 +150,10 @@
           border-left: 3px solid var(--line); border-radius: 3px;
           padding: 13px 14px 14px; box-shadow: var(--shadow); transition: border-left-color .15s; }
   .card.full { border-left-color: var(--accent); }
+  .card.skipped { border-left-color: var(--amber); }
+  .card.skipped .echk[aria-pressed="true"] .box { background: var(--amber); border-color: var(--amber); }
+  .slabel .skip { text-transform: none; letter-spacing: 0; font-size: 11.5px;
+                  font-weight: 600; color: var(--amber); }
 
   .chead { display: flex; align-items: flex-start; gap: 9px; margin-bottom: 3px; }
   .idx { font-family: var(--f-data); font-size: 12px; color: var(--ink-3);
@@ -747,7 +751,8 @@ function render() {
 
   const n3 = document.createElement("p");
   n3.className = "note";
-  n3.innerHTML = "Aquecimento + os <strong>2 primeiros</strong> = <strong>Sessão Mínima Viável</strong>. A fila anda igual — o mínimo não é dívida.";
+  n3.innerHTML = "Aquecimento + os <strong>2 primeiros</strong> = <strong>Sessão Mínima Viável</strong>. A fila anda igual — o mínimo não é dívida.<br>" +
+    "A caixa <strong>encerra</strong> o exercício e te tira dele; quem registra o que foi feito são as <strong>séries</strong>. Encerrar sem série marcada vira <strong>não feito</strong>, e isso é registro legítimo.";
   main.appendChild(n3);
 
   const risk = document.createElement("details");
@@ -770,7 +775,7 @@ function render() {
     const chk = document.createElement("button");
     chk.type = "button"; chk.className = "echk";
     chk.innerHTML = `<span class="box" aria-hidden="true">✓</span>`;
-    chk.setAttribute("aria-label", `Marcar "${blk.name}" como concluído`);
+    chk.setAttribute("aria-label", `Encerrar "${blk.name}" e seguir`);
     head.appendChild(chk);
 
     const nm = document.createElement("span");
@@ -839,20 +844,24 @@ function render() {
     const st0 = () => state[bi] || (state[bi] = { d: [], kg: "" });
 
     /* fromUser: só o toque do usuário grava histórico. Renderização não grava. */
+    /* O checkbox ENCERRA o exercício — não afirma que foi feito.
+       Quem registra o que foi feito são as séries. Encerrado com 0 séries = não fiz. */
     const sync = (fromUser) => {
-      const st = st0(), n = st.d.length, full = n >= blk.sets;
+      const st = st0(), n = st.d.length, todas = n >= blk.sets, pulou = !!st.done && n === 0;
       dotEls.forEach((d, i) => d.setAttribute("aria-pressed", st.d.includes(i) ? "true" : "false"));
       slab.innerHTML = `${unitName} <b>${n} de ${blk.sets}</b>` +
-        (n === 0 ? ` <span class="hint">— toca uma a cada ${blk.unit || "série"} feita</span>` : "");
-      card.classList.toggle("full", full);
-      chk.setAttribute("aria-pressed", full ? "true" : "false");
+        (pulou ? ` <span class="skip">— encerrado sem fazer</span>`
+               : (n === 0 ? ` <span class="hint">— toca uma a cada ${blk.unit || "série"} feita</span>` : ""));
+      card.classList.toggle("full", (!!st.done || todas) && !pulou);
+      card.classList.toggle("skipped", pulou);
+      chk.setAttribute("aria-pressed", st.done ? "true" : "false");
       if (fromUser) noteHist(current, bi, st.kg, n, blk.sets);
       save(current, state); buildLog();
     };
 
     chk.addEventListener("click", () => {
       const st = st0();
-      st.d = st.d.length >= blk.sets ? [] : Array.from({ length: blk.sets }, (_, i) => i);
+      st.done = !st.done;
       stopTimer();
       sync(true);
     });
@@ -973,10 +982,15 @@ function buildLog() {
   if (w) lines.push(`Aquecimento — ${w}/${WARMUP.items.length}`);
   S.blocks.forEach((blk, bi) => {
     const st = state[bi];
-    if (!st || !st.d || !st.d.length) return;
+    if (!st) return;
+    const n = st.d ? st.d.length : 0;
+    if (!n) {
+      if (st.done) lines.push(`${blk.name} — NÃO FEITO`);
+      return;
+    }
     const kg = st.kg ? ` ${st.kg}kg` : "";
-    const unit = blk.unit ? ` volta${st.d.length > 1 ? "s" : ""}` : "";
-    lines.push(`${blk.name}${kg} — ${st.d.length}/${blk.sets}${unit}`);
+    const unit = blk.unit ? ` volta${n > 1 ? "s" : ""}` : "";
+    lines.push(`${blk.name}${kg} — ${n}/${blk.sets}${unit}`);
   });
   if (lines.length === 1) lines.push("(marque as séries pra montar o registro)");
   logEl.value = lines.join("\n");
