@@ -1,0 +1,762 @@
+<meta charset="utf-8">
+<title>Academia CLIMB</title>
+<style>
+  :root {
+    --ground:      #E9EDEB;
+    --surface:     #FAFBFA;
+    --surface-2:   #F1F4F2;
+    --line:        #CDD5D2;
+    --line-soft:   #DDE3E1;
+    --ink:         #141918;
+    --ink-2:       #4C5754;
+    --ink-3:       #75807D;
+    --accent:      #0D6C60;
+    --accent-ink:  #FFFFFF;
+    --accent-soft: #D5E6E2;
+    --amber:       #9C5A1E;
+    --amber-soft:  #F0E2D2;
+    --shadow:      0 1px 2px rgba(20,25,24,.06), 0 6px 18px -12px rgba(20,25,24,.28);
+    --f-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --f-data: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:#0E1211; --surface:#171C1B; --surface-2:#1F2624;
+      --line:#2E3735; --line-soft:#262E2C;
+      --ink:#E7ECEA; --ink-2:#A6B1AE; --ink-3:#7C8785;
+      --accent:#45B8A6; --accent-ink:#06201C; --accent-soft:#16332F;
+      --amber:#D79355; --amber-soft:#33251A;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 18px -12px rgba(0,0,0,.7);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:#0E1211; --surface:#171C1B; --surface-2:#1F2624;
+    --line:#2E3735; --line-soft:#262E2C;
+    --ink:#E7ECEA; --ink-2:#A6B1AE; --ink-3:#7C8785;
+    --accent:#45B8A6; --accent-ink:#06201C; --accent-soft:#16332F;
+    --amber:#D79355; --amber-soft:#33251A;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 18px -12px rgba(0,0,0,.7);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font-family: var(--f-ui); font-size: 16px; line-height: 1.5;
+    -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 14px 110px; }
+
+  .top { background: var(--ground); border-bottom: 1px solid var(--line-soft); padding: 14px 0 0; }
+  .eyebrow { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-3); font-weight: 650; }
+  .datebar { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .datebar .date { font-family: var(--f-data); font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+
+  .queue {
+    display: flex; align-items: center; gap: 9px; margin-top: 12px;
+    font-size: 11px; letter-spacing: .13em; text-transform: uppercase; font-weight: 700;
+    color: var(--accent);
+  }
+  .queue .pip { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
+  .queue.viewing { color: var(--ink-3); }
+  .queue.viewing .pip { background: var(--ink-3); }
+
+  h1 { margin: 3px 0 12px; font-size: clamp(26px,7vw,34px); line-height: 1.08;
+       letter-spacing: -.022em; font-weight: 800; text-wrap: balance; }
+  h1 .sub { display: block; font-size: 14px; font-weight: 500; letter-spacing: 0; color: var(--ink-2); margin-top: 6px; }
+
+  .tabs { display: flex; gap: 6px; padding-bottom: 12px; }
+  .tab {
+    flex: 1; min-height: 50px; position: relative;
+    background: var(--surface-2); color: var(--ink-2);
+    border: 1px solid var(--line-soft); border-radius: 3px;
+    font-family: var(--f-ui); font-size: 15px; font-weight: 750; letter-spacing: .02em;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 1px; cursor: pointer; transition: background .12s, color .12s, border-color .12s;
+  }
+  .tab .d { font-size: 9.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); }
+  .tab[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .tab[aria-selected="true"] .d { color: var(--accent-ink); opacity: .74; }
+  .tab[data-next="1"]::after {
+    content: ""; position: absolute; top: 5px; right: 5px;
+    width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+  }
+  .tab[aria-selected="true"][data-next="1"]::after { background: var(--accent-ink); }
+  .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .tab-cor { border-style: dashed; }
+  .tab-cor[aria-selected="true"] { border-style: solid; }
+
+  .timer {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+    padding: 12px 14px calc(12px + env(safe-area-inset-bottom, 0px));
+    background: var(--accent); color: var(--accent-ink);
+    display: none; box-shadow: 0 -8px 22px -10px rgba(0,0,0,.5);
+  }
+  .timer.on { display: block; }
+  .timer .inner { max-width: 640px; margin: 0 auto; display: flex; align-items: center; gap: 14px; }
+  .timer .num { font-family: var(--f-data); font-size: 30px; font-weight: 700;
+                font-variant-numeric: tabular-nums; letter-spacing: -.02em; min-width: 92px; }
+  .timer .lbl { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; opacity: .78; flex: 1; }
+  .timer button { background: transparent; color: inherit; border: 1px solid currentColor;
+                  border-radius: 3px; padding: 9px 14px; font: inherit; font-size: 13px;
+                  font-weight: 650; cursor: pointer; min-height: 42px; }
+  .timer.done { animation: pulse .5s ease-in-out 3; }
+  @keyframes pulse { 50% { filter: brightness(1.35); } }
+  @media (prefers-reduced-motion: reduce) { .timer.done { animation: none; } }
+
+  .note { background: var(--surface-2); border: 1px solid var(--line-soft);
+          border-left: 3px solid var(--ink-3); border-radius: 3px;
+          padding: 11px 13px; margin-bottom: 12px; font-size: 13.5px; color: var(--ink-2); }
+  .note.warn { border-left-color: var(--amber); background: var(--amber-soft); color: var(--ink); }
+  .note strong { color: var(--ink); }
+
+  details.fold { background: var(--surface); border: 1px solid var(--line-soft);
+                 border-left: 3px solid var(--line); border-radius: 3px;
+                 margin-bottom: 12px; box-shadow: var(--shadow); }
+  details.fold[open] { border-left-color: var(--accent); }
+  details.fold.risk[open] { border-left-color: var(--amber); }
+  details.fold summary { list-style: none; cursor: pointer; padding: 13px 14px;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    font-size: 15px; font-weight: 680; min-height: 48px; }
+  details.fold summary::-webkit-details-marker { display: none; }
+  details.fold summary .t { font-family: var(--f-data); font-size: 12px; color: var(--ink-3); font-weight: 500; }
+  details.fold ul { margin: 0; padding: 0 14px 14px 32px; display: flex; flex-direction: column; gap: 8px; }
+  details.fold li { font-size: 14px; color: var(--ink-2); line-height: 1.5; }
+  details.fold li b { color: var(--ink); font-family: var(--f-data); font-size: 13px; font-weight: 600; }
+  details.fold.risk li b { font-family: var(--f-ui); font-size: 14px; }
+
+  .list { display: flex; flex-direction: column; gap: 10px; }
+  .card { background: var(--surface); border: 1px solid var(--line-soft);
+          border-left: 3px solid var(--line); border-radius: 3px;
+          padding: 13px 14px 14px; box-shadow: var(--shadow); transition: border-left-color .15s; }
+  .card.full { border-left-color: var(--accent); }
+
+  .chead { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 3px; }
+  .idx { font-family: var(--f-data); font-size: 12px; color: var(--ink-3);
+         font-variant-numeric: tabular-nums; padding-top: 3px; min-width: 18px; }
+  .cname { font-size: 16px; font-weight: 680; line-height: 1.3; letter-spacing: -.008em; flex: 1; text-wrap: balance; }
+  .tag { font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700;
+         border: 1px solid var(--accent); color: var(--accent); border-radius: 2px;
+         padding: 3px 5px; white-space: nowrap; margin-top: 2px; }
+  .tag.opt { border-color: var(--ink-3); color: var(--ink-3); }
+
+  .presc { font-family: var(--f-data); font-size: 13px; color: var(--ink);
+           font-variant-numeric: tabular-nums; margin: 0 0 2px 28px; }
+  .cue { font-size: 13px; color: var(--ink-2); margin: 4px 0 0 28px; line-height: 1.45; }
+  .cue.warn { color: var(--amber); font-weight: 550; }
+  .cue.setup { color: var(--ink); }
+  .cue.setup b { color: var(--accent); font-size: 11px; letter-spacing: .1em;
+                 text-transform: uppercase; font-weight: 700; }
+  .howto {
+    display: inline-flex; align-items: center; min-height: 44px;
+    margin: 2px 0 0 28px; padding: 0 2px;
+    color: var(--accent); font-size: 13.5px; font-weight: 650;
+    text-decoration: none; border-bottom: 1px solid transparent;
+  }
+  .howto:hover, .howto:focus-visible { border-bottom-color: var(--accent); }
+  .howto:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  .circ { margin: 8px 0 0 28px; display: flex; flex-direction: column; list-style: none; padding: 0; }
+  .circ li { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0;
+             border-bottom: 1px solid var(--line-soft); font-size: 14.5px; color: var(--ink); }
+  .circ li:last-child { border-bottom: 0; }
+  .circ .r { font-family: var(--f-data); font-size: 13px; color: var(--ink-2);
+             font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  .row { display: flex; align-items: center; gap: 8px; margin: 11px 0 0 28px; flex-wrap: wrap; }
+  .dots { display: flex; gap: 7px; flex-wrap: wrap; }
+  .dot { width: 44px; height: 44px; border-radius: 3px; border: 1.5px solid var(--line);
+         background: var(--surface-2); color: var(--ink-3); font-family: var(--f-data);
+         font-size: 13px; font-weight: 600; cursor: pointer;
+         display: flex; align-items: center; justify-content: center;
+         transition: background .1s, border-color .1s, color .1s; }
+  .dot[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .dot:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .kg { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+  .kg input { width: 78px; min-height: 44px; text-align: right; background: var(--surface-2);
+              border: 1.5px solid var(--line); border-radius: 3px; color: var(--ink);
+              font-family: var(--f-data); font-size: 15px; font-weight: 600;
+              font-variant-numeric: tabular-nums; padding: 0 8px; }
+  .kg input::placeholder { color: var(--ink-3); font-weight: 400; }
+  .kg input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  .kg span { font-family: var(--f-data); font-size: 12px; color: var(--ink-3); }
+
+  .rest { display: flex; gap: 7px; margin: 16px 0 4px; }
+  .rest button { flex: 1; min-height: 46px; background: var(--surface);
+                 border: 1px solid var(--line); border-radius: 3px; color: var(--ink-2);
+                 font-family: var(--f-data); font-size: 14px; font-weight: 600; cursor: pointer; }
+  .rest button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .advance { margin-top: 18px; }
+  .advance .btn { width: 100%; }
+
+  .foot { margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--line-soft); }
+  h2 { font-size: 13px; letter-spacing: .13em; text-transform: uppercase; color: var(--ink-3);
+       font-weight: 700; margin: 0 0 10px; }
+  textarea { width: 100%; min-height: 140px; resize: vertical; background: var(--surface);
+             border: 1px solid var(--line); border-radius: 3px; color: var(--ink);
+             font-family: var(--f-data); font-size: 13px; line-height: 1.65; padding: 12px;
+             font-variant-numeric: tabular-nums; }
+  textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .btns { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .btn { flex: 1; min-height: 48px; min-width: 130px; background: var(--accent);
+         color: var(--accent-ink); border: 1px solid var(--accent); border-radius: 3px;
+         font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+  .btn.ghost { background: transparent; color: var(--ink-2); border-color: var(--line); font-weight: 600; }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .fine { font-size: 12.5px; color: var(--ink-3); margin-top: 14px; line-height: 1.55; }
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div class="datebar">
+      <span class="eyebrow" id="block">Bloco · ago→out</span>
+      <span class="date" id="date"></span>
+    </div>
+    <div class="queue" id="qline"><span class="pip"></span><span id="qtext">Próxima na fila</span></div>
+    <h1 id="title">Sessão A<span class="sub" id="subtitle">Puxar</span></h1>
+    <div class="tabs" role="tablist" id="tabs"></div>
+  </div>
+
+  <div class="timer" id="timer" role="status" aria-live="polite">
+    <div class="inner">
+      <span class="num" id="tnum">0:00</span>
+      <span class="lbl" id="tlbl">descanso</span>
+      <button type="button" id="tstop">Parar</button>
+    </div>
+  </div>
+
+  <main id="main"></main>
+
+  <div class="rest">
+    <button type="button" data-s="60">60s</button>
+    <button type="button" data-s="90">90s</button>
+    <button type="button" data-s="120">2 min</button>
+    <button type="button" data-s="180">3 min</button>
+  </div>
+
+  <div class="advance">
+    <button type="button" class="btn" id="adv">Concluí — avançar a fila</button>
+  </div>
+
+  <div class="foot">
+    <h2>Registro pro diário</h2>
+    <textarea id="log" spellcheck="false" aria-label="Registro da sessão"></textarea>
+    <div class="btns">
+      <button type="button" class="btn" id="copy">Copiar registro</button>
+      <button type="button" class="btn ghost" id="reset">Zerar marcações</button>
+    </div>
+    <p class="fine" id="fine"></p>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+const WARMUP = { t: "7 min", items: [
+  ["Esteira / bike / elíptico leve", "3 min"],
+  ["Rotação externa de ombro c/ banda", "2×15 cada"],
+  ["Band pull-apart", "2×15"],
+  ["Gato-camelo + rotação torácica", "10 + 8 cada"],
+  ["Agachamento livre, sem peso", "10"],
+  ["Círculo de punho + alongar antebraço", "30s cada"]
+]};
+
+const RISCO = [
+  "<b>Escalou num dia livre? Escala bem abaixo do limite.</b> Volume e técnica. O corpo vai dizer que aguenta um grau acima — a polia não tem opinião até romper.",
+  "<b>Nada de hangboard neste bloco.</b> A Fase 0 continua valendo pro dedo, mesmo com o resto do corpo em outro patamar.",
+  "<b>Farmer's walk e pendura em barra grossa, mão aberta</b> — é o quanto de dedo este bloco carrega, e é de propósito.",
+  "<b>Em outubro você volta forte e com dedo destreinado.</b> É o cenário clássico de lesão de escalador voltando. A rampa se planeja lá."
+];
+
+const SESSIONS = {
+  A: { name: "Sessão A", short: "A", tag: "Puxar", sub: "Puxar — costas, bíceps, pegada",
+    note: "A mais importante das quatro. É daqui que sai a escalada.",
+    blocks: [
+      { name:"Barra fixa (máquina assistida se precisar)", sets:4, presc:"4 × 5-8", kg:true, rest:150, min:true,
+        cue:"Pegada pronada aberta. Progressão: assistida → livre → com lastro." },
+      { name:"Puxada alta frente, pegada aberta", sets:4, presc:"4 × 8-10", kg:true, rest:120, min:true,
+        cue:"Puxa até o peito, nunca atrás da nuca." },
+      { name:"Remada curvada com barra (ou remada máquina)", sets:4, presc:"4 × 8-10", kg:true, rest:120,
+        cue:"Puxada horizontal — a que a barra fixa não dá." },
+      { name:"Remada unilateral com halter (serrote)", sets:3, presc:"3 × 10 cada lado", kg:true, rest:90,
+        q:"remada unilateral serrote halter",
+        setup:"Um joelho e uma mão apoiados no banco, tronco paralelo ao chão. Puxa o halter até a costela com o outro braço.",
+        cue:"Tronco paralelo ao chão, sem torcer." },
+      { name:"Face pull na polia", sets:3, presc:"3 × 15", kg:true, rest:60,
+        q:"face pull polia",
+        setup:"Corda na polia alta, na altura do rosto. Puxa a corda em direção à testa <b>abrindo os cotovelos pros lados</b>, como quem vai mostrar bíceps.",
+        cue:"Não pula. É o que segura teu ombro." },
+      { name:"Rosca direta (barra W)", sets:3, presc:"3 × 10", kg:true, rest:60,
+        cue:"Bíceps direto. Cotovelo colado no corpo, sem balançar." },
+      { name:"Rosca martelo", sets:3, presc:"3 × 10", kg:true, rest:60,
+        cue:"Braquial — o que protege o cotovelo de escalador." },
+      { name:"Farmer's walk com halteres", sets:4, presc:"4 × 30-40 m", kg:true, rest:90,
+        q:"farmers walk caminhada do fazendeiro",
+        setup:"Um halter pesado em cada mão e <b>caminha ereto</b>, ombros pra trás, sem balançar. Só isso — o difícil é segurar até o fim.",
+        cue:"Pegada. O melhor que a academia te dá pro antebraço." },
+      { name:"Elevação de pernas pendurado", sets:3, presc:"3 × 10", rest:60,
+        q:"elevação de pernas na barra fixa",
+        setup:"Pendurado na barra, sobe as pernas retas até a altura do quadril e desce <b>devagar</b>, sem balançar.",
+        cue:"Deitado no chão se ainda não sai limpo." }
+    ]},
+
+  B: { name: "Sessão B", short: "B", tag: "Pernas", sub: "Pernas & trilha",
+    note: "Trilha é ladeira longa, descida excêntrica e panturrilha destruída. Isto é pra isso, não pra coxa grande.",
+    blocks: [
+      { name:"Agachamento livre (ou hack / smith)", sets:4, presc:"4 × 6-8", kg:true, rest:180, min:true,
+        cue:"Profundidade antes de carga." },
+      { name:"Levantamento terra romeno (RDL)", sets:3, presc:"3 × 8-10", kg:true, rest:150, min:true,
+        q:"levantamento terra romeno stiff",
+        setup:"Peso na frente das coxas, joelho quase reto. <b>Empurra o quadril pra trás</b> descendo o peso rente à perna até esticar o posterior, e volta. Não é agachar.",
+        cue:"Coluna neutra. Tem que sentir o posterior de coxa." },
+      { name:"Step-up em banco alto com halteres", sets:3, presc:"3 × 10 cada perna", kg:true, rest:90,
+        q:"step up no banco com halteres",
+        setup:"Halter em cada mão, sobe num banco alto <b>com uma perna só</b> e desce controlado. A perna de baixo não empurra.",
+        cue:"O exercício mais específico de trilha que existe." },
+      { name:"Leg press", sets:3, presc:"3 × 10-12", kg:true, rest:120 },
+      { name:"Cadeira flexora", sets:3, presc:"3 × 12", kg:true, rest:60,
+        cue:"Isquios — o que a descida cobra." },
+      { name:"Panturrilha em pé", sets:4, presc:"4 × 15", kg:true, rest:60,
+        cue:"Trilha acaba com panturrilha. Amplitude cheia embaixo." },
+      { name:"Prancha lateral", sets:3, presc:"3 × 30-40s cada lado", rest:60 },
+      { name:"Esteira em inclinação 12-15%, caminhando", sets:1, presc:"10 min", rest:0, opt:true,
+        cue:"Simulação de aproximação. Sem correr." }
+    ]},
+
+  C: { name: "Sessão C", short: "C", tag: "Peito", sub: "Empurrar — peito, ombro, tríceps",
+    note: "Peito e ombro não são enfeite aqui: escalada fecha o ombro e esta sessão abre. Três movimentos de peito, e todos jogam a favor de escalar.",
+    blocks: [
+      { name:"Supino reto com halteres", sets:4, presc:"4 × 8-10", kg:true, rest:150, min:true,
+        cue:"Peito. Antagonista direto de tudo que você puxa na A." },
+      { name:"Desenvolvimento com halteres, sentado", sets:4, presc:"4 × 8-10", kg:true, rest:150, min:true },
+      { name:"Supino inclinado com halteres (ou crucifixo na máquina)", sets:3, presc:"3 × 10-12", kg:true, rest:90,
+        cue:"Peito na porção superior — o ângulo que o supino reto não pega." },
+      { name:"Paralelas / dips (assistida se precisar)", sets:3, presc:"3 × 8-10", kg:true, rest:120,
+        q:"mergulho paralelas dips",
+        setup:"Nas barras paralelas, corpo suspenso nos braços. Desce dobrando o cotovelo até o braço fazer 90° e sobe. Tem máquina assistida se ainda não sai livre.",
+        cue:"Peito baixo + tríceps. Sem jogar o ombro à frente." },
+      { name:"Elevação lateral", sets:3, presc:"3 × 12-15", kg:true, rest:60,
+        cue:"Deltoide medial — estabilidade de ombro." },
+      { name:"Rotação externa na polia baixa, cotovelo a 90°", sets:3, presc:"3 × 15 cada", kg:true, rest:60,
+        q:"rotação externa de ombro na polia",
+        setup:"De lado pra polia. <b>Cotovelo colado na cintura</b>, dobrado a 90°, gira só o antebraço pra fora puxando o cabo. O cotovelo não sai do lugar.",
+        cue:"Manguito rotador. Carga ridícula de leve, de propósito." },
+      { name:"Tríceps na corda", sets:3, presc:"3 × 12", kg:true, rest:60, q:"tríceps corda polia" },
+      { name:"Pallof press na polia", sets:3, presc:"3 × 10 cada lado", kg:true, rest:60,
+        q:"pallof press",
+        setup:"De lado pra polia, alça na altura do peito com as duas mãos. <b>Estende os braços à frente e segura</b> sem deixar o tronco girar. O trabalho é não girar.",
+        cue:"Anti-rotação — o core que a escalada usa de verdade." },
+      { name:"Extensão de dedo c/ elástico + rosca de punho invertida", sets:2, presc:"2 × 15 cada", rest:45,
+        cue:"Anti-lesão de antebraço. Sempre no fim." }
+    ]},
+
+  D: { name: "Sessão D", short: "D", tag: "Tensão", sub: "Tensão & motor — a leve",
+    note: "A sessão pro dia que te moeu. É treino de verdade, não consolo: tensão de core é o que separa escalar de se pendurar.",
+    blocks: [
+      { kind:"circuit", name:"Circuito de tensão", sets:3, unit:"volta", presc:"3 voltas · 60s entre voltas",
+        rest:60, min:true,
+        items:[["Hollow body — deitado de costas, lombar colada no chão, braços e pernas esticados e levantados","30s"],
+               ["Prancha com toque no ombro — na prancha, toca o ombro oposto sem girar o quadril","20 (10 cada)"],
+               ["Ab wheel (ou prancha deslizando no step)","8-10"],
+               ["Ponte de glúteo — deitado, pés no chão, sobe o quadril","15"]] },
+      { name:"Farmer's walk", sets:3, presc:"3 × 40 m", kg:true, rest:90, min:true,
+        q:"farmers walk caminhada do fazendeiro",
+        setup:"Um halter pesado em cada mão e caminha ereto, sem balançar.",
+        cue:"Se não fez na Sessão A." },
+      { name:"Cardio zona 2", sets:1, presc:"25-30 min", rest:0,
+        cue:"Ritmo em que dá pra conversar. É a base aeróbica da trilha." },
+      { name:"Mobilidade", sets:1, presc:"5 min", rest:0,
+        cue:"Quadril, torácica, ombro." }
+    ]}
+};
+
+const COR = {
+  name: "Bloco de cor", short: "COR", tag: "Ofício",
+  sub: "A fila do ofício",
+  note: "Você disse: <em>tenho que fazer, só não sei em que momento</em>. Então não tem noite marcada — tem fila, igual ao treino. Abriu brecha e não é dia de academia, abre o próximo passo.",
+  min: "Mínimo: <strong>25 min com o Resolve aberto</strong>. Abriu e mexeu = passo cumprido.",
+  steps: [
+    { n:"Conform no Resolve", t:"40 min",
+      d:"As duas câmeras na timeline, IDT por clipe, ODT Rec.709. Escolher os planos que entram nos 60-90s. <b>Não graduar nada ainda.</b>" },
+    { n:"Fechar os dois TBD", t:"25 min",
+      d:"O IDT da câmera log e o pivot da Timeline Color Space. Anotar no workflow pra não redescobrir depois." },
+    { n:"Referência na tela", t:"25 min",
+      d:"Os 3 stills de referência abertos ao lado da timeline. <b>É o ponto fixo externo</b> — sem ele a régua sobe junto com a entrega e o look nunca fecha." },
+    { n:"BAL — balanço e exposição", t:"40 min",
+      d:"Todos os planos, só balanço e exposição. Scopes pra <b>diagnosticar antes</b> de mexer, que é o que você já faz bem." },
+    { n:"ADJ — contraste e saturação", t:"40 min",
+      d:"Ainda sem look. Só a base ficando consistente entre as duas câmeras." },
+    { n:"SEC — secundárias", t:"40 min",
+      d:"Pele e céu, o que a cena pedir. Uma de cada vez, sem empilhar." },
+    { n:"LOOK — o look", t:"40 min",
+      d:"Agora sim, contra a referência aberta ao lado. <b>Bateu a ref = suficiente</b> (P7). Não é relaxar padrão, é ter padrão verificável." },
+    { n:"Passada final + export", t:"40 min",
+      d:"O look do primeiro ao último plano, e exporta. Fim da peça." }
+  ]
+};
+
+const ORDER = ["A", "B", "C", "D"];
+const now = new Date();
+const pad = n => String(n).padStart(2, "0");
+const iso = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+
+const mem = {};
+let STORAGE_OK = true;
+try { localStorage.setItem("climb::t", "1"); localStorage.removeItem("climb::t"); }
+catch (e) { STORAGE_OK = false; }
+
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return mem[k] ?? null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) { mem[k] = v; } }
+};
+
+/* fila: persiste entre dias */
+let qi = parseInt(store.get("climb::fila") || "0", 10);
+if (!(qi >= 0 && qi < ORDER.length)) qi = 0;
+
+let current = ORDER[qi];
+const key = s => `climb::${iso}::${s}`;
+const load = s => { try { return JSON.parse(store.get(key(s)) || "{}"); } catch (e) { return {}; } };
+const save = (s, st) => store.set(key(s), JSON.stringify(st));
+let state = load(current);
+
+/* bloco 1 até 06/09, bloco 2 a partir de 07/09 */
+const BLOCO2 = new Date(2026, 8, 7);
+const isB2 = now >= BLOCO2;
+document.getElementById("block").textContent =
+  isB2 ? "Bloco 2 · até 04/10" : "Bloco 1 · até 06/09";
+
+const DIAS = ["dom","seg","ter","qua","qui","sex","sáb"];
+document.getElementById("date").textContent =
+  `${DIAS[now.getDay()]} ${pad(now.getDate())}/${pad(now.getMonth() + 1)}`;
+
+let qcor = parseInt(store.get("climb::cor") || "0", 10);
+if (!(qcor >= 0 && qcor <= COR.steps.length)) qcor = 0;
+
+const tabsEl = document.getElementById("tabs");
+ORDER.concat("COR").forEach(k => {
+  const S = k === "COR" ? COR : SESSIONS[k];
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "tab" + (k === "COR" ? " tab-cor" : "");
+  b.setAttribute("role", "tab"); b.dataset.k = k;
+  b.innerHTML = `${S.short}<span class="d">${S.tag}</span>`;
+  b.addEventListener("click", () => {
+    current = k;
+    if (k !== "COR") {
+      if (!STORAGE_OK) qi = ORDER.indexOf(k);   // sem memória, a aba É a fila
+      state = load(k);
+    }
+    render();
+  });
+  tabsEl.appendChild(b);
+});
+
+/* ---- timer ---- */
+const tEl = document.getElementById("timer");
+const tNum = document.getElementById("tnum");
+const tLbl = document.getElementById("tlbl");
+let tId = null, tLeft = 0;
+const paint = () => { tNum.textContent = `${Math.floor(tLeft / 60)}:${pad(tLeft % 60)}`; };
+
+function startTimer(sec, label) {
+  stopTimer();
+  if (!sec) return;
+  tLeft = sec; tLbl.textContent = label || "descanso";
+  tEl.classList.add("on"); tEl.classList.remove("done");
+  paint();
+  tId = setInterval(() => {
+    tLeft--;
+    if (tLeft <= 0) {
+      paint(); clearInterval(tId); tId = null;
+      tLbl.textContent = "acabou"; tEl.classList.add("done");
+      try { navigator.vibrate && navigator.vibrate([180, 90, 180]); } catch (e) {}
+      setTimeout(() => { if (!tId) tEl.classList.remove("on", "done"); }, 6000);
+      return;
+    }
+    paint();
+  }, 1000);
+}
+function stopTimer() {
+  if (tId) { clearInterval(tId); tId = null; }
+  tEl.classList.remove("on", "done");
+}
+document.getElementById("tstop").addEventListener("click", stopTimer);
+document.querySelectorAll(".rest button").forEach(b =>
+  b.addEventListener("click", () => startTimer(+b.dataset.s)));
+
+/* ---- render ---- */
+const main = document.getElementById("main");
+
+function markTabs() {
+  [...tabsEl.children].forEach(b => {
+    b.setAttribute("aria-selected", b.dataset.k === current ? "true" : "false");
+    b.dataset.next = (b.dataset.k === "COR")
+      ? (qcor < COR.steps.length ? "1" : "0")
+      : (b.dataset.k === ORDER[qi] ? "1" : "0");
+  });
+}
+
+function renderCor() {
+  document.getElementById("title").firstChild.textContent = COR.name;
+  document.getElementById("subtitle").textContent = COR.sub;
+
+  const done = qcor >= COR.steps.length;
+  const ql = document.getElementById("qline");
+  ql.classList.remove("viewing");
+  document.getElementById("qtext").textContent = done
+    ? "Peça fechada — todos os passos"
+    : `Próximo passo · ${qcor + 1} de ${COR.steps.length}`;
+  markTabs();
+
+  main.textContent = "";
+
+  const n1 = document.createElement("p");
+  n1.className = "note"; n1.innerHTML = COR.note;
+  main.appendChild(n1);
+
+  const n2 = document.createElement("p");
+  n2.className = "note warn"; n2.innerHTML = COR.min;
+  main.appendChild(n2);
+
+  const list = document.createElement("div");
+  list.className = "list";
+  main.appendChild(list);
+
+  COR.steps.forEach((st, i) => {
+    const card = document.createElement("div");
+    card.className = "card" + (i < qcor ? " full" : "");
+    if (i > qcor) card.style.opacity = ".55";
+
+    const head = document.createElement("div");
+    head.className = "chead";
+    head.innerHTML = `<span class="idx">${pad(i + 1)}</span><span class="cname">${st.n}</span>` +
+      (i === qcor ? `<span class="tag">agora</span>` : "") +
+      (i < qcor ? `<span class="tag opt">feito</span>` : "");
+    card.appendChild(head);
+
+    const p = document.createElement("p");
+    p.className = "presc"; p.textContent = st.t;
+    card.appendChild(p);
+
+    const d = document.createElement("p");
+    d.className = "cue"; d.innerHTML = st.d;
+    card.appendChild(d);
+
+    list.appendChild(card);
+  });
+
+  const adv = document.getElementById("adv");
+  adv.textContent = done ? "Recomeçar a fila do ofício" : "Fiz esse — próximo passo";
+
+  document.getElementById("fine").innerHTML =
+    "O passo cumprido vira uma linha factual na daily (<b>bloco: ofício</b>) e o marco datado vai pra <b>🎨 Trilha — Cor</b>. Sem adjetivo e sem nota.";
+
+  logEl.value = done
+    ? "Peça de cor — todos os passos concluídos"
+    : `Ofício/cor — ${pad(now.getDate())}/${pad(now.getMonth() + 1)}\nPasso ${qcor + 1}/${COR.steps.length}: ${COR.steps[qcor].n}`;
+}
+
+function render() {
+  if (current === "COR") return renderCor();
+  const S = SESSIONS[current];
+  document.getElementById("title").firstChild.textContent = S.name;
+  document.getElementById("subtitle").textContent = S.sub;
+
+  const isNext = current === ORDER[qi];
+  const ql = document.getElementById("qline");
+  ql.classList.toggle("viewing", !isNext);
+  document.getElementById("qtext").textContent =
+    !STORAGE_OK ? "Este navegador não guarda a fila — escolha a sessão na aba"
+    : isNext ? "Próxima na fila"
+    : `Só vendo · a próxima é a ${SESSIONS[ORDER[qi]].name}`;
+
+  markTabs();
+
+  main.textContent = "";
+
+  const warm = document.createElement("details");
+  warm.className = "fold";
+  warm.innerHTML = `<summary>Aquecimento <span class="t">${WARMUP.t} · toda sessão</span></summary><ul>` +
+    WARMUP.items.map(([n, r]) => `<li>${n} — <b>${r}</b></li>`).join("") + `</ul>`;
+  main.appendChild(warm);
+
+  const n1 = document.createElement("p");
+  n1.className = "note"; n1.innerHTML = S.note;
+  main.appendChild(n1);
+
+  const n2 = document.createElement("p");
+  n2.className = "note warn";
+  n2.innerHTML = isB2
+    ? "<strong>Bloco 2:</strong> os dois primeiros descem pra <strong>5-8 reps</strong> com mais carga. Acessórios ficam 8-12."
+    : "<strong>Bloco 1:</strong> topo da faixa, <strong>2-3 reps na reserva</strong>. O trabalho é achar a carga e anotar, não bater recorde.";
+  main.appendChild(n2);
+
+  const n3 = document.createElement("p");
+  n3.className = "note";
+  n3.innerHTML = "Aquecimento + os <strong>2 primeiros</strong> = <strong>Sessão Mínima Viável</strong>. A fila anda igual — o mínimo não é dívida.";
+  main.appendChild(n3);
+
+  const risk = document.createElement("details");
+  risk.className = "fold risk";
+  risk.innerHTML = `<summary>⚠ O risco deste bloco <span class="t">dedo x puxada</span></summary><ul>` +
+    RISCO.map(r => `<li>${r}</li>`).join("") + `</ul>`;
+  main.appendChild(risk);
+
+  const list = document.createElement("div");
+  list.className = "list";
+  main.appendChild(list);
+
+  S.blocks.forEach((blk, bi) => {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const head = document.createElement("div");
+    head.className = "chead";
+    head.innerHTML = `<span class="idx">${pad(bi + 1)}</span><span class="cname">${blk.name}</span>` +
+      (blk.min ? `<span class="tag">mínimo</span>` : "") +
+      (blk.opt ? `<span class="tag opt">opcional</span>` : "");
+    card.appendChild(head);
+
+    const p = document.createElement("p");
+    p.className = "presc"; p.textContent = blk.presc;
+    card.appendChild(p);
+
+    if (blk.kind === "circuit") {
+      const ul = document.createElement("ul");
+      ul.className = "circ";
+      ul.innerHTML = blk.items.map(([n, r]) => `<li><span>${n}</span><span class="r">${r}</span></li>`).join("");
+      card.appendChild(ul);
+    }
+    if (blk.setup) {
+      const s = document.createElement("p"); s.className = "cue setup";
+      s.innerHTML = "<b>Como é:</b> " + blk.setup; card.appendChild(s);
+    }
+    if (blk.cue) {
+      const c = document.createElement("p"); c.className = "cue"; c.textContent = blk.cue; card.appendChild(c);
+    }
+    if (blk.kind !== "circuit") {
+      const q = blk.q || blk.name.replace(/\s*[\(—].*$/, "").trim();
+      const a = document.createElement("a");
+      a.className = "howto";
+      a.href = "https://www.youtube.com/results?search_query=" +
+               encodeURIComponent(q + " execução correta");
+      a.target = "_blank"; a.rel = "noopener noreferrer";
+      a.textContent = "▶ ver execução";
+      a.setAttribute("aria-label", `Ver vídeo de execução — ${q}`);
+      card.appendChild(a);
+    }
+
+    const row = document.createElement("div");
+    row.className = "row";
+    const dots = document.createElement("div");
+    dots.className = "dots";
+    const done = state[bi]?.d || [];
+
+    for (let i = 0; i < blk.sets; i++) {
+      const d = document.createElement("button");
+      d.type = "button"; d.className = "dot";
+      d.textContent = blk.sets === 1 ? "✓" : String(i + 1);
+      d.setAttribute("aria-pressed", done.includes(i) ? "true" : "false");
+      d.setAttribute("aria-label", `${blk.unit || "série"} ${i + 1} de ${blk.sets} — ${blk.name}`);
+      d.addEventListener("click", () => {
+        const st = state[bi] || (state[bi] = { d: [], kg: "" });
+        const at = st.d.indexOf(i);
+        if (at > -1) st.d.splice(at, 1); else st.d.push(i);
+        d.setAttribute("aria-pressed", at > -1 ? "false" : "true");
+        card.classList.toggle("full", st.d.length >= blk.sets);
+        save(current, state); buildLog();
+        if (at === -1 && i < blk.sets - 1) {
+          startTimer(blk.rest, blk.unit ? "entre voltas" : "descanso");
+        }
+      });
+      dots.appendChild(d);
+    }
+    row.appendChild(dots);
+
+    if (blk.kg) {
+      const kg = document.createElement("div");
+      kg.className = "kg";
+      const inp = document.createElement("input");
+      inp.type = "text"; inp.inputMode = "decimal"; inp.placeholder = "—";
+      inp.value = state[bi]?.kg || "";
+      inp.setAttribute("aria-label", `Peso — ${blk.name}`);
+      inp.addEventListener("input", () => {
+        const st = state[bi] || (state[bi] = { d: [], kg: "" });
+        st.kg = inp.value; save(current, state); buildLog();
+      });
+      kg.appendChild(inp);
+      const u = document.createElement("span"); u.textContent = "kg";
+      kg.appendChild(u);
+      row.appendChild(kg);
+    }
+
+    card.appendChild(row);
+    if (done.length >= blk.sets) card.classList.add("full");
+    list.appendChild(card);
+  });
+
+  const adv = document.getElementById("adv");
+  adv.textContent = (isNext || !STORAGE_OK)
+    ? `Concluí — ir pra ${SESSIONS[ORDER[(qi + 1) % ORDER.length]].name}`
+    : `Voltar pra fila (${SESSIONS[ORDER[qi]].name})`;
+
+  document.getElementById("fine").innerHTML = STORAGE_OK
+    ? "Só fato: exercício, peso, séries&nbsp;×&nbsp;reps. Sem adjetivo e sem nota de qualidade — cola no <b>diario-de-treino</b> e marca <b>bloco: corpo</b> na daily. A fila e as marcações ficam salvas neste aparelho."
+    : "Só fato: exercício, peso, séries&nbsp;×&nbsp;reps — cola no <b>diario-de-treino</b> e marca <b>bloco: corpo</b> na daily. <b>Atenção:</b> este navegador não está guardando nada — copie o registro antes de fechar a página.";
+
+  buildLog();
+}
+
+/* ---- fila ---- */
+document.getElementById("adv").addEventListener("click", () => {
+  if (current === "COR") {
+    qcor = qcor >= COR.steps.length ? 0 : qcor + 1;
+    store.set("climb::cor", String(qcor));
+    window.scrollTo(0, 0);
+    render();
+    return;
+  }
+  if (current === ORDER[qi]) {
+    qi = (qi + 1) % ORDER.length;
+    store.set("climb::fila", String(qi));
+  }
+  current = ORDER[qi];
+  state = load(current);
+  stopTimer();
+  window.scrollTo(0, 0);
+  render();
+});
+
+/* ---- log ---- */
+const logEl = document.getElementById("log");
+function buildLog() {
+  const S = SESSIONS[current];
+  const lines = [`${S.name} (${S.tag}) — ${pad(now.getDate())}/${pad(now.getMonth() + 1)}`];
+  S.blocks.forEach((blk, bi) => {
+    const st = state[bi];
+    if (!st || !st.d || !st.d.length) return;
+    const kg = st.kg ? ` ${st.kg}kg` : "";
+    const unit = blk.unit ? ` volta${st.d.length > 1 ? "s" : ""}` : "";
+    lines.push(`${blk.name}${kg} — ${st.d.length}/${blk.sets}${unit}`);
+  });
+  if (lines.length === 1) lines.push("(marque as séries pra montar o registro)");
+  logEl.value = lines.join("\n");
+}
+
+document.getElementById("copy").addEventListener("click", async () => {
+  const b = document.getElementById("copy");
+  logEl.focus(); logEl.select();
+  let ok = false;
+  try { await navigator.clipboard.writeText(logEl.value); ok = true; }
+  catch (e) { try { ok = document.execCommand("copy"); } catch (e2) { ok = false; } }
+  b.textContent = ok ? "Copiado" : "Selecionado — copie";
+  setTimeout(() => { b.textContent = "Copiar registro"; }, 2200);
+});
+
+document.getElementById("reset").addEventListener("click", () => {
+  state = {}; save(current, state); stopTimer(); render();
+});
+
+render();
+</script>
