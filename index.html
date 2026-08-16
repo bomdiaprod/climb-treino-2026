@@ -204,6 +204,27 @@
   .howto:hover, .howto:focus-visible { border-bottom-color: var(--accent); }
   .howto:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
+  details.shot { margin: 4px 0 0 28px; }
+  details.shot summary {
+    list-style: none; cursor: pointer; display: inline-flex; align-items: center;
+    min-height: 44px; color: var(--accent); font-size: 13.5px; font-weight: 650;
+    border-bottom: 1px solid transparent;
+  }
+  details.shot summary::-webkit-details-marker { display: none; }
+  details.shot[open] summary { border-bottom-color: var(--accent); }
+  details.shot summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .frames { display: flex; gap: 8px; margin: 8px 0 4px; }
+  .frames figure { flex: 1; margin: 0; min-width: 0; }
+  .frames img {
+    display: block; width: 100%; height: auto; border-radius: 3px;
+    border: 1px solid var(--line-soft); background: var(--surface-2);
+  }
+  .frames figcaption {
+    margin-top: 4px; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--ink-3); font-weight: 650; text-align: center;
+  }
+  details.shot .howto { margin: 2px 0 0; min-height: 40px; font-size: 13px; }
+
   .circ { margin: 8px 0 0 28px; display: flex; flex-direction: column; list-style: none; padding: 0; }
   .circ li { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0;
              border-bottom: 1px solid var(--line-soft); font-size: 14.5px; color: var(--ink); }
@@ -262,6 +283,8 @@
   .btn.ghost { background: transparent; color: var(--ink-2); border-color: var(--line); font-weight: 600; }
   .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .fine { font-size: 12.5px; color: var(--ink-3); margin-top: 14px; line-height: 1.55; }
+  .fine.credit { margin-top: 8px; font-size: 11.5px; }
+  .fine.credit a { color: var(--ink-2); }
 </style>
 
 <div class="wrap">
@@ -304,6 +327,10 @@
       <button type="button" class="btn ghost" id="reset">Zerar marcações</button>
     </div>
     <p class="fine" id="fine"></p>
+    <p class="fine credit">
+      Imagens de execução: <a href="https://github.com/yuhonas/free-exercise-db" target="_blank" rel="noopener noreferrer">free-exercise-db</a>,
+      domínio público (The Unlicense).
+    </p>
   </div>
 </div>
 
@@ -330,33 +357,33 @@ const SESSIONS = {
   A: { name: "Sessão A", short: "A", tag: "Puxar", sub: "Puxar — costas, bíceps, pegada",
     note: "A mais importante das quatro. É daqui que sai a escalada.",
     blocks: [
-      { name:"Barra fixa", sets:4, presc:"4 × 5-8", kg:true, rest:150, min:true,
+      { name:"Barra fixa", img:"barra-fixa", sets:4, presc:"4 × 5-8", kg:true, rest:150, min:true,
         kgLabel:"lastro", q:"barra fixa pegada pronada",
         setup:"É o <b>teu próprio peso</b>. Livre e sem lastro: deixa o campo vazio — o que progride são as <b>repetições</b>. Só quando as 4×8 saírem limpas é que entra lastro (cinto ou halter entre os pés) e o número vem pra cá.",
         cue:"Pegada pronada aberta. Se um dia precisar da máquina assistida, anota a assistência com sinal de menos (ex: -20)." },
-      { name:"Puxada alta frente, pegada aberta", sets:4, presc:"4 × 8-10", kg:true, rest:120, min:true,
+      { name:"Puxada alta frente, pegada aberta", img:"puxada-alta", sets:4, presc:"4 × 8-10", kg:true, rest:120, min:true,
         cue:"Puxa até o peito, nunca atrás da nuca." },
-      { name:"Remada curvada com barra (ou remada máquina)", sets:4, presc:"4 × 8-10", kg:true, rest:120,
+      { name:"Remada curvada com barra (ou remada máquina)", img:"remada-curvada", sets:4, presc:"4 × 8-10", kg:true, rest:120,
         cue:"Puxada horizontal — a que a barra fixa não dá." },
-      { name:"Remada unilateral com halter (serrote)", sets:3, presc:"3 × 10 cada lado", kg:true, rest:90,
+      { name:"Remada unilateral com halter (serrote)", img:"serrote", sets:3, presc:"3 × 10 cada lado", kg:true, rest:90,
         q:"remada unilateral serrote halter",
         setup:"Um joelho e uma mão apoiados no banco, tronco paralelo ao chão. Puxa o halter até a costela com o outro braço.",
         cue:"Tronco paralelo ao chão, sem torcer." },
-      { name:"Face pull na polia", sets:3, presc:"3 × 15", kg:true, rest:60,
+      { name:"Face pull na polia", img:"face-pull", sets:3, presc:"3 × 15", kg:true, rest:60,
         q:"face pull polia",
         setup:"Corda na polia alta, na altura do rosto. Puxa a corda em direção à testa <b>abrindo os cotovelos pros lados</b>, como quem vai mostrar bíceps.",
         cue:"Não pula. É o que segura teu ombro." },
-      { name:"Rosca direta (barra W)", sets:3, presc:"3 × 10", kg:true, rest:60,
+      { name:"Rosca direta (barra W)", img:"rosca-w", sets:3, presc:"3 × 10", kg:true, rest:60,
         q:"rosca direta barra w",
         setup:"<b>A barra vazia já tem peso</b> — a W costuma ter entre 5 e 10 kg, e vem gravado nela. Anota o total: barra + anilhas. Barra sozinha não é zero.",
         cue:"Cotovelo colado no corpo, sem balançar o tronco pra ajudar." },
-      { name:"Rosca martelo", sets:3, presc:"3 × 10", kg:true, rest:60,
+      { name:"Rosca martelo", img:"rosca-martelo", sets:3, presc:"3 × 10", kg:true, rest:60,
         cue:"Braquial — o que protege o cotovelo de escalador." },
-      { name:"Farmer's walk com halteres", sets:4, presc:"4 × 30-40 m", kg:true, rest:90,
+      { name:"Farmer's walk com halteres", img:"farmers-walk", sets:4, presc:"4 × 30-40 m", kg:true, rest:90,
         q:"farmers walk caminhada do fazendeiro",
         setup:"Um halter pesado em cada mão e <b>caminha ereto</b>, ombros pra trás, sem balançar. Só isso — o difícil é segurar até o fim.",
         cue:"Pegada. O melhor que a academia te dá pro antebraço." },
-      { name:"Elevação de pernas pendurado", sets:3, presc:"3 × 10", rest:60,
+      { name:"Elevação de pernas pendurado", img:"elev-pernas", sets:3, presc:"3 × 10", rest:60,
         q:"elevação de pernas na barra fixa",
         setup:"Pendurado na barra, sobe as pernas retas até a altura do quadril e desce <b>devagar</b>, sem balançar.",
         cue:"Deitado no chão se ainda não sai limpo." }
@@ -365,22 +392,22 @@ const SESSIONS = {
   B: { name: "Sessão B", short: "B", tag: "Pernas", sub: "Pernas & trilha",
     note: "Trilha é ladeira longa, descida excêntrica e panturrilha destruída. Isto é pra isso, não pra coxa grande.",
     blocks: [
-      { name:"Agachamento livre (ou hack / smith)", sets:4, presc:"4 × 6-8", kg:true, step:5, rest:180, min:true,
+      { name:"Agachamento livre (ou hack / smith)", img:"agachamento", sets:4, presc:"4 × 6-8", kg:true, step:5, rest:180, min:true,
         cue:"Profundidade antes de carga." },
-      { name:"Levantamento terra romeno (RDL)", sets:3, presc:"3 × 8-10", kg:true, step:5, rest:150, min:true,
+      { name:"Levantamento terra romeno (RDL)", img:"rdl", sets:3, presc:"3 × 8-10", kg:true, step:5, rest:150, min:true,
         q:"levantamento terra romeno stiff",
         setup:"Peso na frente das coxas, joelho quase reto. <b>Empurra o quadril pra trás</b> descendo o peso rente à perna até esticar o posterior, e volta. Não é agachar.",
         cue:"Coluna neutra. Tem que sentir o posterior de coxa." },
-      { name:"Step-up em banco alto com halteres", sets:3, presc:"3 × 10 cada perna", kg:true, step:5, rest:90,
+      { name:"Step-up em banco alto com halteres", img:"step-up", sets:3, presc:"3 × 10 cada perna", kg:true, step:5, rest:90,
         q:"step up no banco com halteres",
         setup:"Halter em cada mão, sobe num banco alto <b>com uma perna só</b> e desce controlado. A perna de baixo não empurra.",
         cue:"O exercício mais específico de trilha que existe." },
-      { name:"Leg press", sets:3, presc:"3 × 10-12", kg:true, step:5, rest:120 },
-      { name:"Cadeira flexora", sets:3, presc:"3 × 12", kg:true, step:5, rest:60,
+      { name:"Leg press", img:"leg-press", sets:3, presc:"3 × 10-12", kg:true, step:5, rest:120 },
+      { name:"Cadeira flexora", img:"flexora", sets:3, presc:"3 × 12", kg:true, step:5, rest:60,
         cue:"Isquios — o que a descida cobra." },
-      { name:"Panturrilha em pé", sets:4, presc:"4 × 15", kg:true, step:5, rest:60,
+      { name:"Panturrilha em pé", img:"panturrilha", sets:4, presc:"4 × 15", kg:true, step:5, rest:60,
         cue:"Trilha acaba com panturrilha. Amplitude cheia embaixo." },
-      { name:"Prancha lateral", sets:3, presc:"3 × 30-40s cada lado", rest:60 },
+      { name:"Prancha lateral", img:"prancha-lateral", sets:3, presc:"3 × 30-40s cada lado", rest:60 },
       { name:"Esteira em inclinação 12-15%, caminhando", sets:1, presc:"10 min", rest:0, opt:true,
         cue:"Simulação de aproximação. Sem correr." }
     ]},
@@ -388,23 +415,23 @@ const SESSIONS = {
   C: { name: "Sessão C", short: "C", tag: "Peito", sub: "Empurrar — peito, ombro, tríceps",
     note: "Peito e ombro não são enfeite aqui: escalada fecha o ombro e esta sessão abre. Três movimentos de peito, e todos jogam a favor de escalar.",
     blocks: [
-      { name:"Supino reto com halteres", sets:4, presc:"4 × 8-10", kg:true, rest:150, min:true,
+      { name:"Supino reto com halteres", img:"supino-reto", sets:4, presc:"4 × 8-10", kg:true, rest:150, min:true,
         cue:"Peito. Antagonista direto de tudo que você puxa na A." },
-      { name:"Desenvolvimento com halteres, sentado", sets:4, presc:"4 × 8-10", kg:true, rest:150, min:true },
-      { name:"Supino inclinado com halteres (ou crucifixo na máquina)", sets:3, presc:"3 × 10-12", kg:true, rest:90,
+      { name:"Desenvolvimento com halteres, sentado", img:"desenvolvimento", sets:4, presc:"4 × 8-10", kg:true, rest:150, min:true },
+      { name:"Supino inclinado com halteres (ou crucifixo na máquina)", img:"supino-inclinado", sets:3, presc:"3 × 10-12", kg:true, rest:90,
         cue:"Peito na porção superior — o ângulo que o supino reto não pega." },
-      { name:"Paralelas / dips (assistida se precisar)", sets:3, presc:"3 × 8-10", kg:true, rest:120,
+      { name:"Paralelas / dips (assistida se precisar)", img:"dips", sets:3, presc:"3 × 8-10", kg:true, rest:120,
         q:"mergulho paralelas dips",
         setup:"Nas barras paralelas, corpo suspenso nos braços. Desce dobrando o cotovelo até o braço fazer 90° e sobe. Tem máquina assistida se ainda não sai livre.",
         cue:"Peito baixo + tríceps. Sem jogar o ombro à frente." },
-      { name:"Elevação lateral", sets:3, presc:"3 × 12-15", kg:true, rest:60,
+      { name:"Elevação lateral", img:"elev-lateral", sets:3, presc:"3 × 12-15", kg:true, rest:60,
         cue:"Deltoide medial — estabilidade de ombro." },
-      { name:"Rotação externa na polia baixa, cotovelo a 90°", sets:3, presc:"3 × 15 cada", kg:true, rest:60,
+      { name:"Rotação externa na polia baixa, cotovelo a 90°", img:"rot-externa", sets:3, presc:"3 × 15 cada", kg:true, rest:60,
         q:"rotação externa de ombro na polia",
         setup:"De lado pra polia. <b>Cotovelo colado na cintura</b>, dobrado a 90°, gira só o antebraço pra fora puxando o cabo. O cotovelo não sai do lugar.",
         cue:"Manguito rotador. Carga ridícula de leve, de propósito." },
-      { name:"Tríceps na corda", sets:3, presc:"3 × 12", kg:true, rest:60, q:"tríceps corda polia" },
-      { name:"Pallof press na polia", sets:3, presc:"3 × 10 cada lado", kg:true, rest:60,
+      { name:"Tríceps na corda", img:"triceps-corda", sets:3, presc:"3 × 12", kg:true, rest:60, q:"tríceps corda polia" },
+      { name:"Pallof press na polia", img:"pallof", sets:3, presc:"3 × 10 cada lado", kg:true, rest:60,
         q:"pallof press",
         setup:"De lado pra polia, alça na altura do peito com as duas mãos. <b>Estende os braços à frente e segura</b> sem deixar o tronco girar. O trabalho é não girar.",
         cue:"Anti-rotação — o core que a escalada usa de verdade." },
@@ -421,7 +448,7 @@ const SESSIONS = {
                ["Prancha com toque no ombro — na prancha, toca o ombro oposto sem girar o quadril","20 (10 cada)"],
                ["Ab wheel (ou prancha deslizando no step)","8-10"],
                ["Ponte de glúteo — deitado, pés no chão, sobe o quadril","15"]] },
-      { name:"Farmer's walk", sets:3, presc:"3 × 40 m", kg:true, rest:90, min:true,
+      { name:"Farmer's walk", img:"farmers-walk", sets:3, presc:"3 × 40 m", kg:true, rest:90, min:true,
         q:"farmers walk caminhada do fazendeiro",
         setup:"Um halter pesado em cada mão e caminha ereto, sem balançar.",
         cue:"Se não fez na Sessão A." },
@@ -774,14 +801,29 @@ function render() {
     }
     if (blk.kind !== "circuit") {
       const q = blk.q || blk.name.replace(/\s*[\(—].*$/, "").trim();
-      const a = document.createElement("a");
-      a.className = "howto";
-      a.href = "https://www.youtube.com/results?search_query=" +
-               encodeURIComponent(q + " execução correta");
-      a.target = "_blank"; a.rel = "noopener noreferrer";
-      a.textContent = "▶ ver execução";
-      a.setAttribute("aria-label", `Ver vídeo de execução — ${q}`);
-      card.appendChild(a);
+
+      if (blk.img) {
+        const det = document.createElement("details");
+        det.className = "shot";
+        det.innerHTML =
+          `<summary>▣ ver execução</summary>` +
+          `<div class="frames">` +
+          `<figure><img loading="lazy" decoding="async" src="img/${blk.img}-0.jpg" alt="${blk.name} — posição inicial"><figcaption>início</figcaption></figure>` +
+          `<figure><img loading="lazy" decoding="async" src="img/${blk.img}-1.jpg" alt="${blk.name} — posição final"><figcaption>fim</figcaption></figure>` +
+          `</div>` +
+          `<a class="howto" target="_blank" rel="noopener noreferrer" ` +
+          `href="https://www.youtube.com/results?search_query=${encodeURIComponent(q + " execução correta")}">▶ ver em vídeo</a>`;
+        card.appendChild(det);
+      } else {
+        const a = document.createElement("a");
+        a.className = "howto";
+        a.href = "https://www.youtube.com/results?search_query=" +
+                 encodeURIComponent(q + " execução correta");
+        a.target = "_blank"; a.rel = "noopener noreferrer";
+        a.textContent = "▶ ver execução em vídeo";
+        a.setAttribute("aria-label", `Ver vídeo de execução — ${q}`);
+        card.appendChild(a);
+      }
     }
 
     const slab = document.createElement("p");
