@@ -162,7 +162,15 @@
   .circ .r { font-family: var(--f-data); font-size: 13px; color: var(--ink-2);
              font-variant-numeric: tabular-nums; white-space: nowrap; }
 
-  .row { display: flex; align-items: center; gap: 8px; margin: 11px 0 0 28px; flex-wrap: wrap; }
+  .slabel {
+    margin: 12px 0 5px 28px; font-size: 10.5px; letter-spacing: .13em;
+    text-transform: uppercase; color: var(--ink-3); font-weight: 650;
+  }
+  .slabel b { color: var(--accent); font-family: var(--f-data); font-size: 12px;
+              letter-spacing: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .slabel .hint { text-transform: none; letter-spacing: 0; font-size: 11.5px;
+                  font-weight: 500; color: var(--ink-3); }
+  .row { display: flex; align-items: center; gap: 8px; margin: 0 0 0 28px; flex-wrap: wrap; }
   .dots { display: flex; gap: 7px; flex-wrap: wrap; }
   .dot { width: 44px; height: 44px; border-radius: 3px; border: 1.5px solid var(--line);
          background: var(--surface-2); color: var(--ink-3); font-family: var(--f-data);
@@ -274,7 +282,9 @@ const SESSIONS = {
     note: "A mais importante das quatro. É daqui que sai a escalada.",
     blocks: [
       { name:"Barra fixa (máquina assistida se precisar)", sets:4, presc:"4 × 5-8", kg:true, rest:150, min:true,
-        cue:"Pegada pronada aberta. Progressão: assistida → livre → com lastro." },
+        kgLabel:"assist.", q:"barra fixa pegada pronada",
+        setup:"É o <b>teu próprio peso</b> — não tem carga a somar. Na máquina assistida, o peso que você põe é o que te <b>ajuda</b> a subir: quanto maior, mais fácil. Anota esse número aqui.",
+        cue:"Pegada pronada aberta. Progresso = a assistência ir DIMINUINDO. Depois: livre, e só então com lastro." },
       { name:"Puxada alta frente, pegada aberta", sets:4, presc:"4 × 8-10", kg:true, rest:120, min:true,
         cue:"Puxa até o peito, nunca atrás da nuca." },
       { name:"Remada curvada com barra (ou remada máquina)", sets:4, presc:"4 × 8-10", kg:true, rest:120,
@@ -288,7 +298,9 @@ const SESSIONS = {
         setup:"Corda na polia alta, na altura do rosto. Puxa a corda em direção à testa <b>abrindo os cotovelos pros lados</b>, como quem vai mostrar bíceps.",
         cue:"Não pula. É o que segura teu ombro." },
       { name:"Rosca direta (barra W)", sets:3, presc:"3 × 10", kg:true, rest:60,
-        cue:"Bíceps direto. Cotovelo colado no corpo, sem balançar." },
+        q:"rosca direta barra w",
+        setup:"<b>A barra vazia já tem peso</b> — a W costuma ter entre 5 e 10 kg, e vem gravado nela. Anota o total: barra + anilhas. Barra sozinha não é zero.",
+        cue:"Cotovelo colado no corpo, sem balançar o tronco pra ajudar." },
       { name:"Rosca martelo", sets:3, presc:"3 × 10", kg:true, rest:60,
         cue:"Braquial — o que protege o cotovelo de escalador." },
       { name:"Farmer's walk com halteres", sets:4, presc:"4 × 30-40 m", kg:true, rest:90,
@@ -647,11 +659,23 @@ function render() {
       card.appendChild(a);
     }
 
+    const slab = document.createElement("p");
+    slab.className = "slabel";
+    card.appendChild(slab);
+
     const row = document.createElement("div");
     row.className = "row";
     const dots = document.createElement("div");
     dots.className = "dots";
     const done = state[bi]?.d || [];
+
+    const unitName = blk.unit ? "voltas" : "séries";
+    const paintLabel = () => {
+      const n = (state[bi]?.d || []).length;
+      slab.innerHTML = `${unitName} <b>${n} de ${blk.sets}</b>` +
+        (n === 0 ? ` <span class="hint">— toca uma a cada ${blk.unit || "série"} feita</span>` : "");
+    };
+    paintLabel();
 
     for (let i = 0; i < blk.sets; i++) {
       const d = document.createElement("button");
@@ -665,6 +689,7 @@ function render() {
         if (at > -1) st.d.splice(at, 1); else st.d.push(i);
         d.setAttribute("aria-pressed", at > -1 ? "false" : "true");
         card.classList.toggle("full", st.d.length >= blk.sets);
+        paintLabel();
         save(current, state); buildLog();
         if (at === -1 && i < blk.sets - 1) {
           startTimer(blk.rest, blk.unit ? "entre voltas" : "descanso");
@@ -686,7 +711,7 @@ function render() {
         st.kg = inp.value; save(current, state); buildLog();
       });
       kg.appendChild(inp);
-      const u = document.createElement("span"); u.textContent = "kg";
+      const u = document.createElement("span"); u.textContent = blk.kgLabel || "kg";
       kg.appendChild(u);
       row.appendChild(kg);
     }
