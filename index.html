@@ -121,6 +121,27 @@
   details.fold summary .t { font-family: var(--f-data); font-size: 12px; color: var(--ink-3); font-weight: 500; }
   details.fold ul { margin: 0; padding: 0 14px 14px 32px; display: flex; flex-direction: column; gap: 8px; }
   details.fold li { font-size: 14px; color: var(--ink-2); line-height: 1.5; }
+
+  details.wfold.done { border-left-color: var(--accent); }
+  ul.wlist { list-style: none; padding: 0 10px 12px 10px !important; gap: 2px !important; }
+  ul.wlist li { padding: 0; }
+  .witem {
+    width: 100%; min-height: 48px; display: flex; align-items: center; gap: 11px;
+    background: transparent; border: 0; border-radius: 3px; padding: 6px 8px;
+    font: inherit; font-size: 14.5px; color: var(--ink-2); text-align: left; cursor: pointer;
+  }
+  .witem .box {
+    flex: none; width: 26px; height: 26px; border-radius: 3px;
+    border: 1.5px solid var(--line); background: var(--surface-2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; color: transparent; line-height: 1;
+  }
+  .witem[aria-pressed="true"] .box { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .witem[aria-pressed="true"] .wn { color: var(--ink-3); text-decoration: line-through; }
+  .witem .wn { flex: 1; }
+  .witem .wr { font-family: var(--f-data); font-size: 12.5px; color: var(--ink-3);
+               font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .witem:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
   details.fold li b { color: var(--ink); font-family: var(--f-data); font-size: 13px; font-weight: 600; }
   details.fold.risk li b { font-family: var(--f-ui); font-size: 14px; }
 
@@ -282,9 +303,9 @@ const SESSIONS = {
     note: "A mais importante das quatro. É daqui que sai a escalada.",
     blocks: [
       { name:"Barra fixa (máquina assistida se precisar)", sets:4, presc:"4 × 5-8", kg:true, rest:150, min:true,
-        kgLabel:"assist.", q:"barra fixa pegada pronada",
-        setup:"É o <b>teu próprio peso</b> — não tem carga a somar. Na máquina assistida, o peso que você põe é o que te <b>ajuda</b> a subir: quanto maior, mais fácil. Anota esse número aqui.",
-        cue:"Pegada pronada aberta. Progresso = a assistência ir DIMINUINDO. Depois: livre, e só então com lastro." },
+        kgLabel:"lastro", q:"barra fixa pegada pronada",
+        setup:"É o <b>teu próprio peso</b>. Livre e sem lastro: deixa o campo vazio — o que progride são as <b>repetições</b>. Só quando as 4×8 saírem limpas é que entra lastro (cinto ou halter entre os pés) e o número vem pra cá.",
+        cue:"Pegada pronada aberta. Se um dia precisar da máquina assistida, anota a assistência com sinal de menos (ex: -20)." },
       { name:"Puxada alta frente, pegada aberta", sets:4, presc:"4 × 8-10", kg:true, rest:120, min:true,
         cue:"Puxa até o peito, nunca atrás da nuca." },
       { name:"Remada curvada com barra (ou remada máquina)", sets:4, presc:"4 × 8-10", kg:true, rest:120,
@@ -569,6 +590,45 @@ function renderCor() {
     : `Ofício/cor — ${pad(now.getDate())}/${pad(now.getMonth() + 1)}\nPasso ${qcor + 1}/${COR.steps.length}: ${COR.steps[qcor].n}`;
 }
 
+function buildWarmup() {
+  const warm = document.createElement("details");
+  warm.className = "fold wfold";
+
+  const sum = document.createElement("summary");
+  const ttl = document.createElement("span"); ttl.textContent = "Aquecimento";
+  const cnt = document.createElement("span"); cnt.className = "t";
+  sum.appendChild(ttl); sum.appendChild(cnt);
+
+  const ul = document.createElement("ul"); ul.className = "wlist";
+  const get = () => (state.warm || (state.warm = []));
+
+  const paint = () => {
+    const n = get().length, total = WARMUP.items.length;
+    cnt.textContent = `${n} de ${total} · ${WARMUP.t}`;
+    warm.classList.toggle("done", n >= total);
+  };
+
+  WARMUP.items.forEach(([nm, r], i) => {
+    const li = document.createElement("li");
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "witem";
+    b.setAttribute("aria-pressed", get().includes(i) ? "true" : "false");
+    b.innerHTML = `<span class="box" aria-hidden="true">✓</span>` +
+                  `<span class="wn">${nm}</span><span class="wr">${r}</span>`;
+    b.addEventListener("click", () => {
+      const w = get(), at = w.indexOf(i);
+      if (at > -1) w.splice(at, 1); else w.push(i);
+      b.setAttribute("aria-pressed", at > -1 ? "false" : "true");
+      save(current, state); paint(); buildLog();
+    });
+    li.appendChild(b); ul.appendChild(li);
+  });
+
+  warm.appendChild(sum); warm.appendChild(ul);
+  paint();
+  return warm;
+}
+
 function render() {
   if (current === "COR") return renderCor();
   const S = SESSIONS[current];
@@ -587,11 +647,7 @@ function render() {
 
   main.textContent = "";
 
-  const warm = document.createElement("details");
-  warm.className = "fold";
-  warm.innerHTML = `<summary>Aquecimento <span class="t">${WARMUP.t} · toda sessão</span></summary><ul>` +
-    WARMUP.items.map(([n, r]) => `<li>${n} — <b>${r}</b></li>`).join("") + `</ul>`;
-  main.appendChild(warm);
+  main.appendChild(buildWarmup());
 
   const n1 = document.createElement("p");
   n1.className = "note"; n1.innerHTML = S.note;
@@ -758,6 +814,8 @@ const logEl = document.getElementById("log");
 function buildLog() {
   const S = SESSIONS[current];
   const lines = [`${S.name} (${S.tag}) — ${pad(now.getDate())}/${pad(now.getMonth() + 1)}`];
+  const w = (state.warm || []).length;
+  if (w) lines.push(`Aquecimento — ${w}/${WARMUP.items.length}`);
   S.blocks.forEach((blk, bi) => {
     const st = state[bi];
     if (!st || !st.d || !st.d.length) return;
