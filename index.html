@@ -151,10 +151,38 @@
           padding: 13px 14px 14px; box-shadow: var(--shadow); transition: border-left-color .15s; }
   .card.full { border-left-color: var(--accent); }
 
-  .chead { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 3px; }
+  .chead { display: flex; align-items: flex-start; gap: 9px; margin-bottom: 3px; }
   .idx { font-family: var(--f-data); font-size: 12px; color: var(--ink-3);
-         font-variant-numeric: tabular-nums; padding-top: 3px; min-width: 18px; }
-  .cname { font-size: 16px; font-weight: 680; line-height: 1.3; letter-spacing: -.008em; flex: 1; text-wrap: balance; }
+         font-variant-numeric: tabular-nums; margin-right: 7px; font-weight: 500; }
+  .cname { font-size: 16px; font-weight: 680; line-height: 1.35; letter-spacing: -.008em;
+           flex: 1; text-wrap: balance; padding-top: 8px; }
+
+  .echk {
+    flex: none; width: 44px; height: 44px; margin: -4px 0 0 -8px;
+    background: transparent; border: 0; padding: 0; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .echk .box {
+    width: 26px; height: 26px; border-radius: 3px;
+    border: 1.5px solid var(--line); background: var(--surface-2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; line-height: 1; color: transparent;
+  }
+  .echk[aria-pressed="true"] .box { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .echk[aria-pressed="true"] ~ .cname { color: var(--ink-3); text-decoration: line-through; }
+  .echk:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; border-radius: 3px; }
+
+  .lastline {
+    margin: 7px 0 0 28px; font-size: 12px; color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .lastline b { color: var(--ink-2); font-family: var(--f-data); font-weight: 700; }
+  .sugtag {
+    display: inline-block; margin-left: 4px; padding: 2px 6px; border-radius: 2px;
+    background: var(--accent-soft); color: var(--accent);
+    font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  }
+  .kg input.sug { border-color: var(--accent); color: var(--accent); }
   .tag { font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700;
          border: 1px solid var(--accent); color: var(--accent); border-radius: 2px;
          padding: 3px 5px; white-space: nowrap; margin-top: 2px; }
@@ -302,7 +330,7 @@ const SESSIONS = {
   A: { name: "Sessão A", short: "A", tag: "Puxar", sub: "Puxar — costas, bíceps, pegada",
     note: "A mais importante das quatro. É daqui que sai a escalada.",
     blocks: [
-      { name:"Barra fixa (máquina assistida se precisar)", sets:4, presc:"4 × 5-8", kg:true, rest:150, min:true,
+      { name:"Barra fixa", sets:4, presc:"4 × 5-8", kg:true, rest:150, min:true,
         kgLabel:"lastro", q:"barra fixa pegada pronada",
         setup:"É o <b>teu próprio peso</b>. Livre e sem lastro: deixa o campo vazio — o que progride são as <b>repetições</b>. Só quando as 4×8 saírem limpas é que entra lastro (cinto ou halter entre os pés) e o número vem pra cá.",
         cue:"Pegada pronada aberta. Se um dia precisar da máquina assistida, anota a assistência com sinal de menos (ex: -20)." },
@@ -337,20 +365,20 @@ const SESSIONS = {
   B: { name: "Sessão B", short: "B", tag: "Pernas", sub: "Pernas & trilha",
     note: "Trilha é ladeira longa, descida excêntrica e panturrilha destruída. Isto é pra isso, não pra coxa grande.",
     blocks: [
-      { name:"Agachamento livre (ou hack / smith)", sets:4, presc:"4 × 6-8", kg:true, rest:180, min:true,
+      { name:"Agachamento livre (ou hack / smith)", sets:4, presc:"4 × 6-8", kg:true, step:5, rest:180, min:true,
         cue:"Profundidade antes de carga." },
-      { name:"Levantamento terra romeno (RDL)", sets:3, presc:"3 × 8-10", kg:true, rest:150, min:true,
+      { name:"Levantamento terra romeno (RDL)", sets:3, presc:"3 × 8-10", kg:true, step:5, rest:150, min:true,
         q:"levantamento terra romeno stiff",
         setup:"Peso na frente das coxas, joelho quase reto. <b>Empurra o quadril pra trás</b> descendo o peso rente à perna até esticar o posterior, e volta. Não é agachar.",
         cue:"Coluna neutra. Tem que sentir o posterior de coxa." },
-      { name:"Step-up em banco alto com halteres", sets:3, presc:"3 × 10 cada perna", kg:true, rest:90,
+      { name:"Step-up em banco alto com halteres", sets:3, presc:"3 × 10 cada perna", kg:true, step:5, rest:90,
         q:"step up no banco com halteres",
         setup:"Halter em cada mão, sobe num banco alto <b>com uma perna só</b> e desce controlado. A perna de baixo não empurra.",
         cue:"O exercício mais específico de trilha que existe." },
-      { name:"Leg press", sets:3, presc:"3 × 10-12", kg:true, rest:120 },
-      { name:"Cadeira flexora", sets:3, presc:"3 × 12", kg:true, rest:60,
+      { name:"Leg press", sets:3, presc:"3 × 10-12", kg:true, step:5, rest:120 },
+      { name:"Cadeira flexora", sets:3, presc:"3 × 12", kg:true, step:5, rest:60,
         cue:"Isquios — o que a descida cobra." },
-      { name:"Panturrilha em pé", sets:4, presc:"4 × 15", kg:true, rest:60,
+      { name:"Panturrilha em pé", sets:4, presc:"4 × 15", kg:true, step:5, rest:60,
         cue:"Trilha acaba com panturrilha. Amplitude cheia embaixo." },
       { name:"Prancha lateral", sets:3, presc:"3 × 30-40s cada lado", rest:60 },
       { name:"Esteira em inclinação 12-15%, caminhando", sets:1, presc:"10 min", rest:0, opt:true,
@@ -466,6 +494,36 @@ document.getElementById("date").textContent =
 
 let qcor = parseInt(store.get("climb::cor") || "0", 10);
 if (!(qcor >= 0 && qcor <= COR.steps.length)) qcor = 0;
+
+/* ---- histórico de carga: sobrevive entre sessões ---- */
+let HIST = {};
+try { HIST = JSON.parse(store.get("climb::hist") || "{}"); } catch (e) { HIST = {}; }
+
+/* PREV é congelado no carregamento: a referência exibida nunca muda por causa
+   do que eu gravar hoje. Sem isso, a primeira renderização apaga a própria
+   referência que ela deveria mostrar. */
+const PREV = JSON.parse(JSON.stringify(HIST));
+
+const hkey = (s, i) => `${s}::${i}`;
+
+function noteHist(s, i, kg, n, total) {
+  if (!kg && !n) return;
+  HIST[hkey(s, i)] = { kg: kg || "", d: iso, n, t: total };
+  store.set("climb::hist", JSON.stringify(HIST));
+}
+
+/* sugestão: fechou todas as séries → sobe um degrau; senão, repete */
+function suggest(h, blk) {
+  const v = parseFloat(String(h.kg).replace(",", "."));
+  if (!isFinite(v)) return { kg: h.kg, why: "repetir" };
+  if (h.n >= h.t) {
+    const step = blk.step || 2.5;
+    return { kg: String(+(v + step).toFixed(2)).replace(".", ","), why: `+${String(step).replace(".", ",")}` };
+  }
+  return { kg: h.kg, why: "repetir" };
+}
+
+const brDate = s => s ? s.slice(8, 10) + "/" + s.slice(5, 7) : "";
 
 const tabsEl = document.getElementById("tabs");
 ORDER.concat("COR").forEach(k => {
@@ -681,9 +739,20 @@ function render() {
 
     const head = document.createElement("div");
     head.className = "chead";
-    head.innerHTML = `<span class="idx">${pad(bi + 1)}</span><span class="cname">${blk.name}</span>` +
-      (blk.min ? `<span class="tag">mínimo</span>` : "") +
-      (blk.opt ? `<span class="tag opt">opcional</span>` : "");
+
+    const chk = document.createElement("button");
+    chk.type = "button"; chk.className = "echk";
+    chk.innerHTML = `<span class="box" aria-hidden="true">✓</span>`;
+    chk.setAttribute("aria-label", `Marcar "${blk.name}" como concluído`);
+    head.appendChild(chk);
+
+    const nm = document.createElement("span");
+    nm.className = "cname";
+    nm.innerHTML = `<span class="idx">${pad(bi + 1)}</span>${blk.name}`;
+    head.appendChild(nm);
+
+    if (blk.min) head.insertAdjacentHTML("beforeend", `<span class="tag">mínimo</span>`);
+    if (blk.opt) head.insertAdjacentHTML("beforeend", `<span class="tag opt">opcional</span>`);
     card.appendChild(head);
 
     const p = document.createElement("p");
@@ -723,57 +792,101 @@ function render() {
     row.className = "row";
     const dots = document.createElement("div");
     dots.className = "dots";
-    const done = state[bi]?.d || [];
-
+    const dotEls = [];
     const unitName = blk.unit ? "voltas" : "séries";
-    const paintLabel = () => {
-      const n = (state[bi]?.d || []).length;
+    const st0 = () => state[bi] || (state[bi] = { d: [], kg: "" });
+
+    /* fromUser: só o toque do usuário grava histórico. Renderização não grava. */
+    const sync = (fromUser) => {
+      const st = st0(), n = st.d.length, full = n >= blk.sets;
+      dotEls.forEach((d, i) => d.setAttribute("aria-pressed", st.d.includes(i) ? "true" : "false"));
       slab.innerHTML = `${unitName} <b>${n} de ${blk.sets}</b>` +
         (n === 0 ? ` <span class="hint">— toca uma a cada ${blk.unit || "série"} feita</span>` : "");
+      card.classList.toggle("full", full);
+      chk.setAttribute("aria-pressed", full ? "true" : "false");
+      if (fromUser) noteHist(current, bi, st.kg, n, blk.sets);
+      save(current, state); buildLog();
     };
-    paintLabel();
+
+    chk.addEventListener("click", () => {
+      const st = st0();
+      st.d = st.d.length >= blk.sets ? [] : Array.from({ length: blk.sets }, (_, i) => i);
+      stopTimer();
+      sync(true);
+    });
 
     for (let i = 0; i < blk.sets; i++) {
       const d = document.createElement("button");
       d.type = "button"; d.className = "dot";
       d.textContent = blk.sets === 1 ? "✓" : String(i + 1);
-      d.setAttribute("aria-pressed", done.includes(i) ? "true" : "false");
       d.setAttribute("aria-label", `${blk.unit || "série"} ${i + 1} de ${blk.sets} — ${blk.name}`);
       d.addEventListener("click", () => {
-        const st = state[bi] || (state[bi] = { d: [], kg: "" });
-        const at = st.d.indexOf(i);
+        const st = st0(), at = st.d.indexOf(i);
         if (at > -1) st.d.splice(at, 1); else st.d.push(i);
-        d.setAttribute("aria-pressed", at > -1 ? "false" : "true");
-        card.classList.toggle("full", st.d.length >= blk.sets);
-        paintLabel();
-        save(current, state); buildLog();
+        sync(true);
         if (at === -1 && i < blk.sets - 1) {
           startTimer(blk.rest, blk.unit ? "entre voltas" : "descanso");
         }
       });
-      dots.appendChild(d);
+      dotEls.push(d); dots.appendChild(d);
     }
     row.appendChild(dots);
+
+    const h = PREV[hkey(current, bi)];
+    const isOld = h && h.d !== iso;
 
     if (blk.kg) {
       const kg = document.createElement("div");
       kg.className = "kg";
       const inp = document.createElement("input");
       inp.type = "text"; inp.inputMode = "decimal"; inp.placeholder = "—";
-      inp.value = state[bi]?.kg || "";
       inp.setAttribute("aria-label", `Peso — ${blk.name}`);
+
+      let sug = null;
+      if (state[bi]?.kg) {
+        inp.value = state[bi].kg;
+      } else if (isOld && h.kg) {
+        sug = suggest(h, blk);
+        inp.value = sug.kg;
+        inp.classList.add("sug");
+        st0().kg = sug.kg;
+      }
+
       inp.addEventListener("input", () => {
-        const st = state[bi] || (state[bi] = { d: [], kg: "" });
-        st.kg = inp.value; save(current, state); buildLog();
+        inp.classList.remove("sug");
+        const st = st0();
+        st.kg = inp.value;
+        noteHist(current, bi, st.kg, st.d.length, blk.sets);
+        save(current, state); buildLog();
       });
+      inp.addEventListener("focus", () => inp.select());
+
       kg.appendChild(inp);
       const u = document.createElement("span"); u.textContent = blk.kgLabel || "kg";
       kg.appendChild(u);
       row.appendChild(kg);
+      card.appendChild(row);
+
+      if (isOld) {
+        const ref = document.createElement("p");
+        ref.className = "lastline";
+        const carga = h.kg ? `<b>${h.kg}</b> ${blk.kgLabel || "kg"}` : "sem carga";
+        const partes = [`última <b>${brDate(h.d)}</b>`, carga, `${h.n} de ${h.t} ${unitName}`];
+        ref.innerHTML = partes.join(" · ") +
+          (sug ? ` <span class="sugtag">${sug.why === "repetir" ? "sugerido: repetir" : "sugerido " + sug.why}</span>` : "");
+        card.appendChild(ref);
+      }
+    } else {
+      card.appendChild(row);
+      if (isOld) {
+        const ref = document.createElement("p");
+        ref.className = "lastline";
+        ref.innerHTML = `última <b>${brDate(h.d)}</b> · ${h.n} de ${h.t} ${unitName}`;
+        card.appendChild(ref);
+      }
     }
 
-    card.appendChild(row);
-    if (done.length >= blk.sets) card.classList.add("full");
+    sync();
     list.appendChild(card);
   });
 
