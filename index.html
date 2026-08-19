@@ -85,6 +85,19 @@
   .tab-cor { border-style: dashed; }
   .tab-cor[aria-selected="true"] { border-style: solid; }
 
+  .sess { display: flex; align-items: center; gap: 10px; padding: 0 0 12px; }
+  .sess.hide { display: none; }
+  .sbtn { background: transparent; color: var(--ink); border: 1px solid var(--line);
+          border-radius: 3px; padding: 0 14px; min-height: 44px; font: inherit;
+          font-size: 13.5px; font-weight: 700; cursor: pointer; flex: none; }
+  .sbtn.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .sbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .snum { font-family: var(--f-data); font-size: 21px; font-weight: 700;
+          font-variant-numeric: tabular-nums; letter-spacing: -.02em; min-width: 76px; }
+  .snum.idle { color: var(--ink-3); }
+  .slbl { font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+          color: var(--ink-3); font-weight: 650; line-height: 1.35; }
+
   .timer {
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
     padding: 12px 14px calc(12px + env(safe-area-inset-bottom, 0px));
@@ -102,6 +115,8 @@
   .timer.done { animation: pulse .5s ease-in-out 3; }
   @keyframes pulse { 50% { filter: brightness(1.35); } }
   @media (prefers-reduced-motion: reduce) { .timer.done { animation: none; } }
+
+  .cue.alt { border-left: 2px solid var(--line); padding-left: 9px; opacity: .92; }
 
   .note { background: var(--surface-2); border: 1px solid var(--line-soft);
           border-left: 3px solid var(--ink-3); border-radius: 3px;
@@ -300,6 +315,11 @@
     <div class="queue" id="qline"><span class="pip"></span><span id="qtext">Próxima na fila</span></div>
     <h1 id="title">Sessão A<span class="sub" id="subtitle">Puxar</span></h1>
     <div class="tabs" role="tablist" id="tabs"></div>
+    <div class="sess" id="sess">
+      <button type="button" class="sbtn" id="sbtn">Iniciar treino</button>
+      <span class="snum idle" id="snum" role="timer" aria-live="off">0:00</span>
+      <span class="slbl" id="slbl">cronômetro da sessão</span>
+    </div>
   </div>
 
   <div class="timer" id="timer" role="status" aria-live="polite">
@@ -358,107 +378,101 @@ const RISCO = [
 ];
 
 const SESSIONS = {
-  A: { name: "Sessão A", short: "A", tag: "Puxar", sub: "Puxar — costas, bíceps, pegada",
-    note: "A mais importante das quatro. É daqui que sai a escalada.",
+  A: { name: "Sessão A", short: "A", tag: "Puxar", sub: "Puxar — o que te sobe na parede",
+    note: "A mais importante das quatro: é daqui que sai a escalada. <b>Seis itens.</b> Duas puxadas de verdade, o ombro protegido e a pegada carregada — sem terceira e quarta versão da mesma puxada.",
     blocks: [
-      { name:"Barra fixa", img:"barra-fixa", sets:4, presc:"4 × 5-8", kg:true, rest:150, min:true,
+      { id:"barra-fixa", name:"Barra fixa", img:"barra-fixa", sets:4, presc:"4 × 5-8", kg:true, rest:150, min:true,
         kgLabel:"lastro", q:"barra fixa pegada pronada",
         setup:"É o <b>teu próprio peso</b>. Livre e sem lastro: deixa o campo vazio — o que progride são as <b>repetições</b>. Só quando as 4×8 saírem limpas é que entra lastro (cinto ou halter entre os pés) e o número vem pra cá.",
-        cue:"Pegada pronada aberta. Se um dia precisar da máquina assistida, anota a assistência com sinal de menos (ex: -20)." },
-      { name:"Puxada alta frente, pegada aberta", img:"puxada-alta", sets:4, presc:"4 × 8-10", kg:true, rest:120, min:true,
-        cue:"Puxa até o peito, nunca atrás da nuca." },
-      { name:"Remada curvada com barra (ou remada máquina)", img:"remada-curvada", sets:4, presc:"4 × 8-10", kg:true, rest:120,
-        cue:"Puxada horizontal — a que a barra fixa não dá." },
-      { name:"Remada unilateral com halter (serrote)", img:"serrote", sets:3, presc:"3 × 10 cada lado", kg:true, rest:90,
-        q:"remada unilateral serrote halter",
-        setup:"Um joelho e uma mão apoiados no banco, tronco paralelo ao chão. Puxa o halter até a costela com o outro braço.",
-        cue:"Tronco paralelo ao chão, sem torcer." },
-      { name:"Face pull na polia", img:"face-pull", sets:3, presc:"3 × 15", kg:true, rest:60,
+        cue:"É o movimento da escalada com o corpo inteiro pendurado — o mais transferível que a academia tem. Pegada pronada aberta.",
+        alt:"<b>Puxada alta frente</b>, 4 × 8-10 até o peito — quando a barra estiver ocupada ou o braço não subir mais. Mesma vaga, não item a mais." },
+      { id:"remada-curvada", name:"Remada curvada com barra", img:"remada-curvada", sets:4, presc:"4 × 8-10", kg:true, rest:120, min:true,
+        cue:"A puxada horizontal — o vetor que a barra fixa não dá e que você usa em toda travessia.",
+        alt:"<b>Remada máquina</b> (mesmas séries) ou <b>serrote com halter</b>, 3 × 10 cada lado, tronco paralelo sem torcer." },
+      { id:"face-pull", name:"Face pull na polia", img:"face-pull", sets:3, presc:"3 × 15", kg:true, rest:60,
         q:"face pull polia",
         setup:"Corda na polia alta, na altura do rosto. Puxa a corda em direção à testa <b>abrindo os cotovelos pros lados</b>, como quem vai mostrar bíceps.",
-        cue:"Não pula. É o que segura teu ombro." },
-      { name:"Rosca direta (barra W)", img:"rosca-w", sets:3, presc:"3 × 10", kg:true, rest:60,
-        q:"rosca direta barra w",
-        setup:"<b>A barra vazia já tem peso</b> — a W costuma ter entre 5 e 10 kg, e vem gravado nela. Anota o total: barra + anilhas. Barra sozinha não é zero.",
-        cue:"Cotovelo colado no corpo, sem balançar o tronco pra ajudar." },
-      { name:"Rosca martelo", img:"rosca-martelo", sets:3, presc:"3 × 10", kg:true, rest:60,
-        cue:"Braquial — o que protege o cotovelo de escalador." },
-      { name:"Farmer's walk com halteres", img:"farmers-walk", sets:4, presc:"4 × 30-40 m", kg:true, rest:90,
+        cue:"Não pula. Escalada fecha o ombro pra frente; este é o que abre de volta." },
+      { id:"rosca-martelo", name:"Rosca martelo", img:"rosca-martelo", sets:3, presc:"3 × 10", kg:true, rest:60,
+        cue:"A única rosca da sessão. Braquial — o que protege o cotovelo, a lesão de escalador mais chata de curar." },
+      { id:"farmers-walk", name:"Farmer's walk com halteres", img:"farmers-walk", sets:4, presc:"4 × 30-40 m", kg:true, rest:90,
         q:"farmers walk caminhada do fazendeiro",
         setup:"Um halter pesado em cada mão e <b>caminha ereto</b>, ombros pra trás, sem balançar. Só isso — o difícil é segurar até o fim.",
-        cue:"Pegada. O melhor que a academia te dá pro antebraço." },
-      { name:"Elevação de pernas pendurado", img:"elev-pernas", sets:3, presc:"3 × 10", rest:60,
+        cue:"<b>Pegada.</b> Mão aberta, sem crimp: é exatamente o quanto de dedo este bloco pode carregar. Enrolar uma toalha na alça engrossa a pegada e aproxima ainda mais da parede." },
+      { id:"elev-pernas", name:"Elevação de pernas pendurado", img:"elev-pernas", sets:3, presc:"3 × 10", rest:60,
         q:"elevação de pernas na barra fixa",
         setup:"Pendurado na barra, sobe as pernas retas até a altura do quadril e desce <b>devagar</b>, sem balançar.",
-        cue:"Deitado no chão se ainda não sai limpo." }
+        cue:"<b>Pendurado é metade do exercício</b> — é tensão de corpo com os pés no ar, que é o que a parede cobra. Deitado só se ainda não sai limpo." }
     ]},
 
-  B: { name: "Sessão B", short: "B", tag: "Pernas", sub: "Pernas & trilha",
-    note: "Trilha é ladeira longa, descida excêntrica e panturrilha destruída. Isto é pra isso, não pra coxa grande.",
+  B: { name: "Sessão B", short: "B", tag: "Pernas", sub: "Pernas & trilha — subir e, sobretudo, descer",
+    note: "Trilha é ladeira longa, descida excêntrica e panturrilha destruída. <b>Seis itens</b> desenhados pra isso, não pra coxa grande.",
     blocks: [
-      { name:"Agachamento livre (ou hack / smith)", img:"agachamento", sets:4, presc:"4 × 6-8", kg:true, step:5, rest:180, min:true,
-        cue:"Profundidade antes de carga." },
-      { name:"Levantamento terra romeno (RDL)", img:"rdl", sets:3, presc:"3 × 8-10", kg:true, step:5, rest:150, min:true,
+      { id:"agachamento", name:"Agachamento livre (ou hack / smith)", img:"agachamento", sets:4, presc:"4 × 6-8", kg:true, step:5, rest:180, min:true,
+        cue:"A base que te levanta do degrau alto com mochila nas costas. Profundidade antes de carga.",
+        alt:"<b>Leg press</b>, 3 × 10-12, nos dias de lombar pedindo folga. É troca, não sequência — os dois no mesmo treino era a mesma coxa duas vezes." },
+      { id:"rdl", name:"Levantamento terra romeno (RDL)", img:"rdl", sets:3, presc:"3 × 8-10", kg:true, step:5, rest:150, min:true,
         q:"levantamento terra romeno stiff",
         setup:"Peso na frente das coxas, joelho quase reto. <b>Empurra o quadril pra trás</b> descendo o peso rente à perna até esticar o posterior, e volta. Não é agachar.",
-        cue:"Coluna neutra. Tem que sentir o posterior de coxa." },
-      { name:"Step-up em banco alto com halteres", img:"step-up", sets:3, presc:"3 × 10 cada perna", kg:true, step:5, rest:90,
+        cue:"Cadeia posterior — a que segura a mochila na subida. Coluna neutra, tem que sentir o posterior de coxa." },
+      { id:"step-up", name:"Step-up em banco alto com halteres", img:"step-up", sets:3, presc:"3 × 10 cada perna", kg:true, step:5, rest:90,
         q:"step up no banco com halteres",
         setup:"Halter em cada mão, sobe num banco alto <b>com uma perna só</b> e desce controlado. A perna de baixo não empurra.",
-        cue:"O exercício mais específico de trilha que existe." },
-      { name:"Leg press", img:"leg-press", sets:3, presc:"3 × 10-12", kg:true, step:5, rest:120 },
-      { name:"Cadeira flexora", img:"flexora", sets:3, presc:"3 × 12", kg:true, step:5, rest:60,
-        cue:"Isquios — o que a descida cobra." },
-      { name:"Panturrilha em pé", img:"panturrilha", sets:4, presc:"4 × 15", kg:true, step:5, rest:60,
+        cue:"O exercício mais específico de trilha que existe: uma perna de cada vez, igual degrau de raiz." },
+      { id:"step-down", name:"Step-down — descida controlada do banco", sets:3, presc:"3 × 8 cada perna", kg:true, step:5, rest:90,
+        q:"step down descida controlada excentrico",
+        setup:"Em pé no banco (mais baixo que o do step-up), <b>desce devagar</b> com uma perna só até o calcanhar tocar o chão, e volta. 3 segundos na descida.",
+        cue:"<b>Entrou no lugar da cadeira flexora em 18/08.</b> Descida de trilha é excêntrico de quadríceps e joelho — é aqui que a trilha machuca, e nenhuma máquina sentada treina isso.",
+        alt:"<b>Cadeira flexora</b>, 3 × 12, se o joelho reclamar da descida controlada." },
+      { id:"panturrilha", name:"Panturrilha em pé", img:"panturrilha", sets:4, presc:"4 × 15", kg:true, step:5, rest:60,
         cue:"Trilha acaba com panturrilha. Amplitude cheia embaixo." },
-      { name:"Prancha lateral", img:"prancha-lateral", sets:3, presc:"3 × 30-40s cada lado", rest:60 },
-      { name:"Esteira em inclinação 12-15%, caminhando", sets:1, presc:"10 min", rest:0, opt:true,
-        cue:"Simulação de aproximação. Sem correr." }
+      { id:"prancha-lateral", name:"Prancha lateral", img:"prancha-lateral", sets:3, presc:"3 × 30-40s cada lado", rest:60,
+        cue:"Quadril firme com mochila nas costas e pé em terreno torto." }
     ]},
 
-  C: { name: "Sessão C", short: "C", tag: "Peito", sub: "Empurrar — peito, ombro, tríceps",
-    note: "Peito e ombro não são enfeite aqui: escalada fecha o ombro e esta sessão abre. Três movimentos de peito, e todos jogam a favor de escalar.",
+  C: { name: "Sessão C", short: "C", tag: "Ombro", sub: "Ombro à prova — o antagonista",
+    note: "Não é dia de peito: é a sessão que <b>mantém teu ombro escalando</b>. Escalada fecha o ombro pra frente; aqui ele abre, gira e estabiliza. <b>Seis itens + finisher</b> — o terceiro peito e o tríceps isolado saíram em 18/08.",
     blocks: [
-      { name:"Supino reto com halteres", img:"supino-reto", sets:4, presc:"4 × 8-10", kg:true, rest:150, min:true,
-        cue:"Peito. Antagonista direto de tudo que você puxa na A." },
-      { name:"Desenvolvimento com halteres, sentado", img:"desenvolvimento", sets:4, presc:"4 × 8-10", kg:true, rest:150, min:true },
-      { name:"Supino inclinado com halteres (ou crucifixo na máquina)", img:"supino-inclinado", sets:3, presc:"3 × 10-12", kg:true, rest:90,
-        cue:"Peito na porção superior — o ângulo que o supino reto não pega." },
-      { name:"Paralelas / dips (assistida se precisar)", img:"dips", sets:3, presc:"3 × 8-10", kg:true, rest:120,
+      { id:"supino-reto", name:"Supino reto com halteres", img:"supino-reto", sets:4, presc:"4 × 8-10", kg:true, rest:150, min:true,
+        cue:"O antagonista direto de tudo que você puxa na Sessão A. Halteres, não barra: cada ombro faz o próprio caminho.",
+        alt:"<b>Supino inclinado</b> ou <b>crucifixo na máquina</b>, 3 × 10-12 — alterna entre uma C e outra se quiser o ângulo alto." },
+      { id:"desenvolvimento", name:"Desenvolvimento com halteres, sentado", img:"desenvolvimento", sets:4, presc:"4 × 8-10", kg:true, rest:150, min:true,
+        cue:"Força acima da cabeça — o braço esticado que sustenta agarra alta e faz topo de bloco." },
+      { id:"dips", name:"Paralelas / dips (assistida se precisar)", img:"dips", sets:3, presc:"3 × 8-10", kg:true, rest:120,
         q:"mergulho paralelas dips",
         setup:"Nas barras paralelas, corpo suspenso nos braços. Desce dobrando o cotovelo até o braço fazer 90° e sobe. Tem máquina assistida se ainda não sai livre.",
-        cue:"Peito baixo + tríceps. Sem jogar o ombro à frente." },
-      { name:"Elevação lateral", img:"elev-lateral", sets:3, presc:"3 × 12-15", kg:true, rest:60,
-        cue:"Deltoide medial — estabilidade de ombro." },
-      { name:"Rotação externa na polia baixa, cotovelo a 90°", img:"rot-externa", sets:3, presc:"3 × 15 cada", kg:true, rest:60,
+        cue:"Peito baixo <b>+ tríceps</b> — é por isso que o tríceps na corda saiu da lista. Sem jogar o ombro à frente.",
+        alt:"<b>Tríceps na corda</b>, 3 × 12, quando as paralelas estiverem ocupadas." },
+      { id:"elev-lateral", name:"Elevação lateral", img:"elev-lateral", sets:3, presc:"3 × 12-15", kg:true, rest:60,
+        cue:"Deltoide medial — o que segura o úmero no lugar quando o braço abre pro lado numa agarra distante." },
+      { id:"rot-externa", name:"Rotação externa na polia baixa, cotovelo a 90°", img:"rot-externa", sets:3, presc:"3 × 15 cada", kg:true, rest:60,
         q:"rotação externa de ombro na polia",
         setup:"De lado pra polia. <b>Cotovelo colado na cintura</b>, dobrado a 90°, gira só o antebraço pra fora puxando o cabo. O cotovelo não sai do lugar.",
-        cue:"Manguito rotador. Carga ridícula de leve, de propósito." },
-      { name:"Tríceps na corda", img:"triceps-corda", sets:3, presc:"3 × 12", kg:true, rest:60, q:"tríceps corda polia" },
-      { name:"Pallof press na polia", img:"pallof", sets:3, presc:"3 × 10 cada lado", kg:true, rest:60,
+        cue:"Manguito rotador. Carga ridícula de leve, de propósito — este não é pra ficar forte, é pra não romper." },
+      { id:"pallof", name:"Pallof press na polia", img:"pallof", sets:3, presc:"3 × 10 cada lado", kg:true, rest:60,
         q:"pallof press",
         setup:"De lado pra polia, alça na altura do peito com as duas mãos. <b>Estende os braços à frente e segura</b> sem deixar o tronco girar. O trabalho é não girar.",
-        cue:"Anti-rotação — o core que a escalada usa de verdade." },
-      { name:"Extensão de dedo c/ elástico + rosca de punho invertida", sets:2, presc:"2 × 15 cada", rest:45,
-        cue:"Anti-lesão de antebraço. Sempre no fim." }
+        cue:"Anti-rotação — é o core que a escalada usa de verdade, quando um pé sai e o corpo quer abrir a porta." },
+      { id:"antebraco", name:"Extensão de dedo c/ elástico + rosca de punho invertida", sets:2, presc:"2 × 15 cada", rest:45, fin:true,
+        cue:"<b>Finisher, 3 min.</b> Anti-lesão de antebraço: o extensor é o músculo que escalador nunca treina e que segura o cotovelo. Sempre no fim." }
     ]},
 
   D: { name: "Sessão D", short: "D", tag: "Tensão", sub: "Tensão & motor — a leve",
     note: "A sessão pro dia que te moeu. É treino de verdade, não consolo: tensão de core é o que separa escalar de se pendurar.",
     blocks: [
-      { kind:"circuit", name:"Circuito de tensão", sets:3, unit:"volta", presc:"3 voltas · 60s entre voltas",
+      { id:"circuito", kind:"circuit", name:"Circuito de tensão", sets:3, unit:"volta", presc:"3 voltas · 60s entre voltas",
         rest:60, min:true,
         items:[["Hollow body — deitado de costas, lombar colada no chão, braços e pernas esticados e levantados","30s"],
                ["Prancha com toque no ombro — na prancha, toca o ombro oposto sem girar o quadril","20 (10 cada)"],
                ["Ab wheel (ou prancha deslizando no step)","8-10"],
                ["Ponte de glúteo — deitado, pés no chão, sobe o quadril","15"]] },
-      { name:"Farmer's walk", img:"farmers-walk", sets:3, presc:"3 × 40 m", kg:true, rest:90, min:true,
+      { id:"farmers-walk-d", name:"Farmer's walk", img:"farmers-walk", sets:3, presc:"3 × 40 m", kg:true, rest:90, min:true,
         q:"farmers walk caminhada do fazendeiro",
         setup:"Um halter pesado em cada mão e caminha ereto, sem balançar.",
         cue:"Se não fez na Sessão A." },
-      { name:"Cardio zona 2", sets:1, presc:"25-30 min", rest:0,
+      { id:"cardio", name:"Cardio zona 2", sets:1, presc:"25-30 min", rest:0,
         cue:"Ritmo em que dá pra conversar. É a base aeróbica da trilha." },
-      { name:"Mobilidade", sets:1, presc:"5 min", rest:0,
+      { id:"mobilidade", name:"Mobilidade", sets:1, presc:"5 min", rest:0,
         cue:"Quadril, torácica, ombro." }
     ]}
 };
@@ -508,7 +522,7 @@ let qi = parseInt(store.get("climb::fila") || "0", 10);
 if (!(qi >= 0 && qi < ORDER.length)) qi = 0;
 
 let current = ORDER[qi];
-const key = s => `climb::${iso}::${s}`;
+const key = s => `climb::v2::${iso}::${s}`;
 const load = s => { try { return JSON.parse(store.get(key(s)) || "{}"); } catch (e) { return {}; } };
 const save = (s, st) => store.set(key(s), JSON.stringify(st));
 let state = load(current);
@@ -529,6 +543,29 @@ if (!(qcor >= 0 && qcor <= COR.steps.length)) qcor = 0;
 /* ---- histórico de carga: sobrevive entre sessões ---- */
 let HIST = {};
 try { HIST = JSON.parse(store.get("climb::hist") || "{}"); } catch (e) { HIST = {}; }
+
+/* Migração 18/08: a carga era guardada pela POSIÇÃO do exercício na lista. A poda mudou as
+   posições — sem converter, o app mostraria a carga de um exercício no campo de outro.
+   Os que saíram da lista não migram: o número deles está no diario-de-treino, datado. */
+const LEGACY = {
+  "A::0":"barra-fixa", "A::2":"remada-curvada", "A::4":"face-pull",
+  "A::6":"rosca-martelo", "A::7":"farmers-walk", "A::8":"elev-pernas",
+  "B::0":"agachamento", "B::1":"rdl", "B::2":"step-up",
+  "B::5":"panturrilha", "B::6":"prancha-lateral",
+  "C::0":"supino-reto", "C::1":"desenvolvimento", "C::3":"dips",
+  "C::4":"elev-lateral", "C::5":"rot-externa", "C::7":"pallof", "C::8":"antebraco",
+  "D::0":"circuito", "D::1":"farmers-walk-d", "D::2":"cardio", "D::3":"mobilidade"
+};
+if (store.get("climb::histv") !== "2") {
+  const conv = {};
+  Object.keys(HIST).forEach(k => {
+    const id = LEGACY[k];
+    if (id) conv[k.slice(0, 1) + "::" + id] = HIST[k];
+  });
+  HIST = conv;
+  store.set("climb::hist", JSON.stringify(HIST));
+  store.set("climb::histv", "2");
+}
 
 /* PREV é congelado no carregamento: a referência exibida nunca muda por causa
    do que eu gravar hoje. Sem isso, a primeira renderização apaga a própria
@@ -572,6 +609,70 @@ ORDER.concat("COR").forEach(k => {
     render();
   });
   tabsEl.appendChild(b);
+});
+
+/* ---- cronômetro da sessão ----
+   Manual de propósito: começa quando você aperta e para quando você aperta. O único
+   automatismo é encerrar sozinho ao avançar a fila, pra não ficar cronômetro fantasma
+   contando a noite inteira. Os dois horários ficam salvos com a sessão do dia. */
+const sBar = document.getElementById("sess");
+const sBtn = document.getElementById("sbtn");
+const sNum = document.getElementById("snum");
+const sLbl = document.getElementById("slbl");
+let sId = null;
+
+const hm = ts => { const d = new Date(ts); return `${d.getHours()}:${pad(d.getMinutes())}`; };
+const dur = ms => {
+  const t = Math.max(0, Math.round(ms / 1000));
+  const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), sec = t % 60;
+  return h ? `${h}:${pad(m)}:${pad(sec)}` : `${m}:${pad(sec)}`;
+};
+const mins = ms => Math.max(1, Math.round(ms / 60000));
+
+/* o cronômetro pertence à SESSÃO, não ao dia: o tempo que vai pro registro é o tempo
+   daquele treino. Se você espiar outra aba com um treino rodando, o aviso continua à vista. */
+function runningElsewhere() {
+  for (const k of ORDER) {
+    if (k === current) continue;
+    const st = load(k);
+    if (st.t0 && !st.t1) return { s: k, t0: st.t0 };
+  }
+  return null;
+}
+
+function paintSess() {
+  if (current === "COR") { sBar.classList.add("hide"); return; }
+  sBar.classList.remove("hide");
+  if (!state.t0) {
+    const other = runningElsewhere();
+    sBtn.textContent = "Iniciar treino"; sBtn.classList.remove("on");
+    sNum.textContent = "0:00"; sNum.classList.add("idle");
+    if (other) sLbl.innerHTML = `<b>${SESSIONS[other.s].name}</b> rodando · ${dur(Date.now() - other.t0)}`;
+    else sLbl.textContent = "cronômetro da sessão";
+  } else if (!state.t1) {
+    sBtn.textContent = "Encerrar"; sBtn.classList.add("on");
+    sNum.textContent = dur(Date.now() - state.t0); sNum.classList.remove("idle");
+    sLbl.textContent = `em treino desde ${hm(state.t0)}`;
+  } else {
+    sBtn.textContent = "Retomar"; sBtn.classList.remove("on");
+    sNum.textContent = dur(state.t1 - state.t0); sNum.classList.remove("idle");
+    sLbl.innerHTML = `${hm(state.t0)} → ${hm(state.t1)} · <b>${mins(state.t1 - state.t0)} min</b>`;
+  }
+}
+function tickSess() {
+  if (sId) { clearInterval(sId); sId = null; }
+  if (current === "COR") return;
+  if ((state.t0 && !state.t1) || runningElsewhere()) sId = setInterval(paintSess, 1000);
+}
+function endSess() {
+  if (current !== "COR" && state.t0 && !state.t1) { state.t1 = Date.now(); save(current, state); }
+}
+sBtn.addEventListener("click", () => {
+  if (current === "COR") return;
+  if (!state.t0) state.t0 = Date.now();
+  else if (!state.t1) state.t1 = Date.now();
+  else state.t1 = null;              // encerrou sem querer, ou o treino continuou
+  save(current, state); paintSess(); tickSess(); buildLog();
 });
 
 /* ---- timer ---- */
@@ -630,6 +731,7 @@ function renderCor() {
     ? "Peça fechada — todos os passos"
     : `Próximo passo · ${qcor + 1} de ${COR.steps.length}`;
   markTabs();
+  paintSess(); tickSess();
 
   main.textContent = "";
 
@@ -733,6 +835,7 @@ function render() {
     : `Só vendo · a próxima é a ${SESSIONS[ORDER[qi]].name}`;
 
   markTabs();
+  paintSess(); tickSess();
 
   main.textContent = "";
 
@@ -751,7 +854,8 @@ function render() {
 
   const n3 = document.createElement("p");
   n3.className = "note";
-  n3.innerHTML = "Aquecimento + os <strong>2 primeiros</strong> = <strong>Sessão Mínima Viável</strong>. A fila anda igual — o mínimo não é dívida.<br>" +
+  n3.innerHTML = "<strong>Seis exercícios, ~45 min.</strong> Quer botar um? Tira outro — a lista não cresce. O que saiu da poda de 18/08 virou <strong>troca</strong> dentro do próprio card.<br>" +
+    "Aquecimento + os <strong>2 primeiros</strong> = <strong>Sessão Mínima Viável</strong>. A fila anda igual — o mínimo não é dívida.<br>" +
     "A caixa <strong>encerra</strong> o exercício e te tira dele; quem registra o que foi feito são as <strong>séries</strong>. Encerrar sem série marcada vira <strong>não feito</strong>, e isso é registro legítimo.";
   main.appendChild(n3);
 
@@ -785,6 +889,7 @@ function render() {
 
     if (blk.min) head.insertAdjacentHTML("beforeend", `<span class="tag">mínimo</span>`);
     if (blk.opt) head.insertAdjacentHTML("beforeend", `<span class="tag opt">opcional</span>`);
+    if (blk.fin) head.insertAdjacentHTML("beforeend", `<span class="tag opt">finisher · 3 min</span>`);
     card.appendChild(head);
 
     const p = document.createElement("p");
@@ -802,7 +907,11 @@ function render() {
       s.innerHTML = "<b>Como é:</b> " + blk.setup; card.appendChild(s);
     }
     if (blk.cue) {
-      const c = document.createElement("p"); c.className = "cue"; c.textContent = blk.cue; card.appendChild(c);
+      const c = document.createElement("p"); c.className = "cue"; c.innerHTML = blk.cue; card.appendChild(c);
+    }
+    if (blk.alt) {
+      const a = document.createElement("p"); a.className = "cue alt";
+      a.innerHTML = "<b>Troca:</b> " + blk.alt; card.appendChild(a);
     }
     if (blk.kind !== "circuit") {
       const q = blk.q || blk.name.replace(/\s*[\(—].*$/, "").trim();
@@ -841,7 +950,7 @@ function render() {
     dots.className = "dots";
     const dotEls = [];
     const unitName = blk.unit ? "voltas" : "séries";
-    const st0 = () => state[bi] || (state[bi] = { d: [], kg: "" });
+    const st0 = () => state[blk.id] || (state[blk.id] = { d: [], kg: "" });
 
     /* fromUser: só o toque do usuário grava histórico. Renderização não grava. */
     /* O checkbox ENCERRA o exercício — não afirma que foi feito.
@@ -855,7 +964,7 @@ function render() {
       card.classList.toggle("full", (!!st.done || todas) && !pulou);
       card.classList.toggle("skipped", pulou);
       chk.setAttribute("aria-pressed", st.done ? "true" : "false");
-      if (fromUser) noteHist(current, bi, st.kg, n, blk.sets);
+      if (fromUser) noteHist(current, blk.id, st.kg, n, blk.sets);
       save(current, state); buildLog();
     };
 
@@ -883,7 +992,7 @@ function render() {
     }
     row.appendChild(dots);
 
-    const h = PREV[hkey(current, bi)];
+    const h = PREV[hkey(current, blk.id)];
     const isOld = h && h.d !== iso;
 
     if (blk.kg) {
@@ -894,8 +1003,8 @@ function render() {
       inp.setAttribute("aria-label", `Peso — ${blk.name}`);
 
       let sug = null;
-      if (state[bi]?.kg) {
-        inp.value = state[bi].kg;
+      if (state[blk.id]?.kg) {
+        inp.value = state[blk.id].kg;
       } else if (isOld && h.kg) {
         sug = suggest(h, blk);
         inp.value = sug.kg;
@@ -907,7 +1016,7 @@ function render() {
         inp.classList.remove("sug");
         const st = st0();
         st.kg = inp.value;
-        noteHist(current, bi, st.kg, st.d.length, blk.sets);
+        noteHist(current, blk.id, st.kg, st.d.length, blk.sets);
         save(current, state); buildLog();
       });
       inp.addEventListener("focus", () => inp.select());
@@ -947,7 +1056,7 @@ function render() {
     : `Voltar pra fila (${SESSIONS[ORDER[qi]].name})`;
 
   document.getElementById("fine").innerHTML = STORAGE_OK
-    ? "Só fato: exercício, peso, séries&nbsp;×&nbsp;reps. Sem adjetivo e sem nota de qualidade — cola no <b>diario-de-treino</b> e marca <b>bloco: corpo</b> na daily. A fila e as marcações ficam salvas neste aparelho."
+    ? "Só fato: tempo, exercício, peso, séries&nbsp;×&nbsp;reps. Sem adjetivo e sem nota de qualidade — cola no <b>diario-de-treino</b> e marca <b>bloco: corpo</b> na daily. A fila, o cronômetro e as marcações ficam salvos neste aparelho."
     : "Só fato: exercício, peso, séries&nbsp;×&nbsp;reps — cola no <b>diario-de-treino</b> e marca <b>bloco: corpo</b> na daily. <b>Atenção:</b> este navegador não está guardando nada — copie o registro antes de fechar a página.";
 
   buildLog();
@@ -962,6 +1071,7 @@ document.getElementById("adv").addEventListener("click", () => {
     render();
     return;
   }
+  endSess();
   if (current === ORDER[qi]) {
     qi = (qi + 1) % ORDER.length;
     store.set("climb::fila", String(qi));
@@ -978,10 +1088,16 @@ const logEl = document.getElementById("log");
 function buildLog() {
   const S = SESSIONS[current];
   const lines = [`${S.name} (${S.tag}) — ${pad(now.getDate())}/${pad(now.getMonth() + 1)}`];
+  if (state.t0 && state.t1) {
+    lines.push(`Treino ${hm(state.t0)} → ${hm(state.t1)} · ${mins(state.t1 - state.t0)} min`);
+  } else if (state.t0) {
+    lines.push(`Treino iniciado ${hm(state.t0)} — em andamento`);
+  }
+  const head = lines.length;
   const w = (state.warm || []).length;
   if (w) lines.push(`Aquecimento — ${w}/${WARMUP.items.length}`);
   S.blocks.forEach((blk, bi) => {
-    const st = state[bi];
+    const st = state[blk.id];
     if (!st) return;
     const n = st.d ? st.d.length : 0;
     if (!n) {
@@ -992,7 +1108,7 @@ function buildLog() {
     const unit = blk.unit ? ` volta${n > 1 ? "s" : ""}` : "";
     lines.push(`${blk.name}${kg} — ${n}/${blk.sets}${unit}`);
   });
-  if (lines.length === 1) lines.push("(marque as séries pra montar o registro)");
+  if (lines.length === head) lines.push("(marque as séries pra montar o registro)");
   logEl.value = lines.join("\n");
 }
 
