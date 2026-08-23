@@ -397,7 +397,7 @@ const SESSIONS = {
         setup:"É o <b>teu próprio peso</b>. Livre e sem lastro: deixa o campo vazio — o que progride são as <b>repetições</b>. Só quando as 4×8 saírem limpas é que entra lastro (cinto ou halter entre os pés) e o número vem pra cá.",
         cue:"É o movimento da escalada com o corpo inteiro pendurado — o mais transferível que a academia tem. Pegada pronada aberta.",
         alt:"<b>Puxada alta frente</b>, 4 × 8-10 até o peito — quando a barra estiver ocupada ou o braço não subir mais. Mesma vaga, não item a mais." },
-      { id:"remada-curvada", name:"Remada curvada com barra", img:"remada-curvada", sets:4, presc:"4 × 8-10", kg:true, rest:120, min:true,
+      { id:"remada-curvada", name:"Remada curvada com barra", img:"remada-curvada", sets:4, presc:"4 × 8-10", presc2:"4 × 5-8", kg:true, rest:120, min:true,
         cue:"A puxada horizontal — o vetor que a barra fixa não dá e que você usa em toda travessia.",
         alt:"<b>Remada máquina</b> (mesmas séries) ou <b>serrote com halter</b>, 3 × 10 cada lado, tronco paralelo sem torcer." },
       { id:"face-pull", name:"Face pull na polia", img:"face-pull", sets:3, presc:"3 × 15", kg:true, rest:60,
@@ -425,7 +425,7 @@ const SESSIONS = {
       { id:"agachamento", name:"Agachamento livre (ou hack / smith)", img:"agachamento", sets:4, presc:"4 × 6-8", kg:true, step:5, rest:180, min:true,
         cue:"A base que te levanta do degrau alto com mochila nas costas. Profundidade antes de carga.",
         alt:"<b>Leg press</b>, 3 × 10-12, nos dias de lombar pedindo folga. É troca, não sequência — os dois no mesmo treino era a mesma coxa duas vezes." },
-      { id:"rdl", name:"Levantamento terra romeno (RDL)", img:"rdl", sets:3, presc:"3 × 8-10", kg:true, step:5, rest:150, min:true,
+      { id:"rdl", name:"Levantamento terra romeno (RDL)", img:"rdl", sets:3, presc:"3 × 8-10", presc2:"3 × 5-8", kg:true, step:5, rest:150, min:true,
         q:"levantamento terra romeno stiff",
         setup:"Peso na frente das coxas, joelho quase reto. <b>Empurra o quadril pra trás</b> descendo o peso rente à perna até esticar o posterior, e volta. Não é agachar.",
         cue:"Cadeia posterior — a que segura a mochila na subida. Coluna neutra, tem que sentir o posterior de coxa." },
@@ -452,10 +452,10 @@ const SESSIONS = {
   C: { name: "Sessão C", short: "C", tag: "Ombro", sub: "Ombro à prova — o antagonista",
     note: "Não é dia de peito: é a sessão que <b>mantém teu ombro escalando</b>. Escalada fecha o ombro pra frente; aqui ele abre, gira e estabiliza. <b>Seis itens + 2 finishers</b> — o terceiro peito e o tríceps isolado saíram em 18/08.",
     blocks: [
-      { id:"supino-reto", name:"Supino reto com halteres", img:"supino-reto", sets:4, presc:"4 × 8-10", kg:true, rest:150, min:true,
+      { id:"supino-reto", name:"Supino reto com halteres", img:"supino-reto", sets:4, presc:"4 × 8-10", presc2:"4 × 5-8", kg:true, rest:150, min:true,
         cue:"O antagonista direto de tudo que você puxa na Sessão A. Halteres, não barra: cada ombro faz o próprio caminho.",
         alt:"<b>Supino inclinado</b> ou <b>crucifixo na máquina</b>, 3 × 10-12 — alterna entre uma C e outra se quiser o ângulo alto." },
-      { id:"desenvolvimento", name:"Desenvolvimento com halteres, sentado", img:"desenvolvimento", sets:4, presc:"4 × 8-10", kg:true, rest:150, min:true,
+      { id:"desenvolvimento", name:"Desenvolvimento com halteres, sentado", img:"desenvolvimento", sets:4, presc:"4 × 8-10", presc2:"4 × 5-8", kg:true, rest:150, min:true,
         cue:"Força acima da cabeça — o braço esticado que sustenta agarra alta e faz topo de bloco." },
       { id:"dips", name:"Paralelas / dips (assistida se precisar)", img:"dips", sets:3, presc:"3 × 8-10", kg:true, rest:120,
         q:"mergulho paralelas dips",
@@ -900,7 +900,7 @@ function render() {
     card.appendChild(head);
 
     const p = document.createElement("p");
-    p.className = "presc"; p.textContent = blk.presc;
+    p.className = "presc"; p.textContent = (isB2 && blk.presc2) ? blk.presc2 : blk.presc;
     card.appendChild(p);
 
     if (blk.kind === "circuit") {
