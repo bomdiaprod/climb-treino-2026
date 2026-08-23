@@ -361,14 +361,25 @@
 <script>
 "use strict";
 
-const WARMUP = { t: "7 min", items: [
+/* Base comum a toda sessão + um bloco específico por tipo de sessão — 23/08:
+   a B é dia de perna e vinha recebendo o mesmo aquecimento de ombro da A/C.
+   Ativa o que a sessão do dia vai cobrar, não o genérico de sempre. */
+const WARMUP_BASE = [
   ["Esteira / bike / elíptico leve", "3 min"],
-  ["Rotação externa de ombro c/ banda", "2×15 cada"],
-  ["Band pull-apart", "2×15"],
-  ["Gato-camelo + rotação torácica", "10 + 8 cada"],
-  ["Agachamento livre, sem peso", "10"],
-  ["Círculo de punho + alongar antebraço", "30s cada"]
-]};
+  ["Gato-camelo + rotação torácica", "10 + 8 cada lado"]
+];
+const WARMUP_BY = {
+  A: [ ["Rotação externa de ombro c/ banda", "2×15 cada"],
+       ["Band pull-apart", "2×15"],
+       ["Círculo de punho + alongar antebraço", "30s cada"] ],
+  C: [ ["Rotação externa de ombro c/ banda", "2×15 cada"],
+       ["Band pull-apart", "2×15"],
+       ["Círculo de punho + alongar antebraço", "30s cada"] ],
+  B: [ ["Agachamento livre, sem peso", "10"],
+       ["Ponte de glúteo — ativação", "15"],
+       ["Círculo de tornozelo", "10 cada lado"] ]
+};
+function warmupFor(s) { return WARMUP_BASE.concat(WARMUP_BY[s] || []); }
 
 const RISCO = [
   "<b>Escalou num dia livre? Escala bem abaixo do limite.</b> Volume e técnica. O corpo vai dizer que aguenta um grau acima — a polia não tem opinião até romper.",
@@ -379,7 +390,7 @@ const RISCO = [
 
 const SESSIONS = {
   A: { name: "Sessão A", short: "A", tag: "Puxar", sub: "Puxar — o que te sobe na parede",
-    note: "A mais importante das quatro: é daqui que sai a escalada. <b>Seis itens.</b> Duas puxadas de verdade, o ombro protegido e a pegada carregada — sem terceira e quarta versão da mesma puxada.",
+    note: "A mais importante das três: é daqui que sai a escalada. <b>Seis itens + finisher.</b> Duas puxadas de verdade, o ombro protegido e a pegada carregada — sem terceira e quarta versão da mesma puxada.",
     blocks: [
       { id:"barra-fixa", name:"Barra fixa", img:"barra-fixa", sets:4, presc:"4 × 5-8", kg:true, rest:150, min:true,
         kgLabel:"lastro", q:"barra fixa pegada pronada",
@@ -402,7 +413,10 @@ const SESSIONS = {
       { id:"elev-pernas", name:"Elevação de pernas pendurado", img:"elev-pernas", sets:3, presc:"3 × 10", rest:60,
         q:"elevação de pernas na barra fixa",
         setup:"Pendurado na barra, sobe as pernas retas até a altura do quadril e desce <b>devagar</b>, sem balançar.",
-        cue:"<b>Pendurado é metade do exercício</b> — é tensão de corpo com os pés no ar, que é o que a parede cobra. Deitado só se ainda não sai limpo." }
+        cue:"<b>Pendurado é metade do exercício</b> — é tensão de corpo com os pés no ar, que é o que a parede cobra. Deitado só se ainda não sai limpo." },
+      { id:"core-finisher", name:"Hollow body + ab wheel", sets:2, presc:"30s + 8-10", rest:60, fin:true, finT:"3 min",
+        setup:"Hollow body: deitado de costas, lombar colada no chão, braços e pernas esticados e levantados, 30s. Ab wheel: rola pra frente e volta (ou prancha deslizando no step), 8-10.",
+        cue:"<b>Finisher, 3 min.</b> Veio da antiga Sessão D — mesma família de tensão de tronco da elevação de pernas acima, só que sem pendurar." }
     ]},
 
   B: { name: "Sessão B", short: "B", tag: "Pernas", sub: "Pernas & trilha — subir e, sobretudo, descer",
@@ -427,11 +441,16 @@ const SESSIONS = {
       { id:"panturrilha", name:"Panturrilha em pé", img:"panturrilha", sets:4, presc:"4 × 15", kg:true, step:5, rest:60,
         cue:"Trilha acaba com panturrilha. Amplitude cheia embaixo." },
       { id:"prancha-lateral", name:"Prancha lateral", img:"prancha-lateral", sets:3, presc:"3 × 30-40s cada lado", rest:60,
-        cue:"Quadril firme com mochila nas costas e pé em terreno torto." }
+        cue:"Quadril firme com mochila nas costas e pé em terreno torto." },
+      { id:"ponte-gluteo", name:"Ponte de glúteo", sets:1, presc:"15", rest:45, fin:true, finT:"2 min",
+        setup:"Deitado, pés no chão, sobe o quadril.",
+        cue:"<b>Finisher, 2 min.</b> Veio da antiga Sessão D — cadeia posterior, complementa o RDL acima." },
+      { id:"cardio-b", name:"Cardio zona 2", sets:1, presc:"20-25 min", rest:0, fin:true,
+        cue:"<b>Veio da antiga Sessão D.</b> Ritmo em que dá pra conversar — é a base aeróbica da trilha, e essa é a sessão de trilha." }
     ]},
 
   C: { name: "Sessão C", short: "C", tag: "Ombro", sub: "Ombro à prova — o antagonista",
-    note: "Não é dia de peito: é a sessão que <b>mantém teu ombro escalando</b>. Escalada fecha o ombro pra frente; aqui ele abre, gira e estabiliza. <b>Seis itens + finisher</b> — o terceiro peito e o tríceps isolado saíram em 18/08.",
+    note: "Não é dia de peito: é a sessão que <b>mantém teu ombro escalando</b>. Escalada fecha o ombro pra frente; aqui ele abre, gira e estabiliza. <b>Seis itens + 2 finishers</b> — o terceiro peito e o tríceps isolado saíram em 18/08.",
     blocks: [
       { id:"supino-reto", name:"Supino reto com halteres", img:"supino-reto", sets:4, presc:"4 × 8-10", kg:true, rest:150, min:true,
         cue:"O antagonista direto de tudo que você puxa na Sessão A. Halteres, não barra: cada ombro faz o próprio caminho.",
@@ -453,27 +472,11 @@ const SESSIONS = {
         q:"pallof press",
         setup:"De lado pra polia, alça na altura do peito com as duas mãos. <b>Estende os braços à frente e segura</b> sem deixar o tronco girar. O trabalho é não girar.",
         cue:"Anti-rotação — é o core que a escalada usa de verdade, quando um pé sai e o corpo quer abrir a porta." },
-      { id:"antebraco", name:"Extensão de dedo c/ elástico + rosca de punho invertida", sets:2, presc:"2 × 15 cada", rest:45, fin:true,
+      { id:"prancha-ombro", name:"Prancha com toque no ombro", sets:1, presc:"20 (10 cada)", rest:45, fin:true, finT:"2 min",
+        setup:"Na prancha, toca o ombro oposto sem girar o quadril.",
+        cue:"<b>Finisher, 2 min.</b> Veio da antiga Sessão D — mesma família anti-rotação do pallof press acima." },
+      { id:"antebraco", name:"Extensão de dedo c/ elástico + rosca de punho invertida", sets:2, presc:"2 × 15 cada", rest:45, fin:true, finT:"3 min",
         cue:"<b>Finisher, 3 min.</b> Anti-lesão de antebraço: o extensor é o músculo que escalador nunca treina e que segura o cotovelo. Sempre no fim." }
-    ]},
-
-  D: { name: "Sessão D", short: "D", tag: "Tensão", sub: "Tensão & motor — a leve",
-    note: "A sessão pro dia que te moeu. É treino de verdade, não consolo: tensão de core é o que separa escalar de se pendurar.",
-    blocks: [
-      { id:"circuito", kind:"circuit", name:"Circuito de tensão", sets:3, unit:"volta", presc:"3 voltas · 60s entre voltas",
-        rest:60, min:true,
-        items:[["Hollow body — deitado de costas, lombar colada no chão, braços e pernas esticados e levantados","30s"],
-               ["Prancha com toque no ombro — na prancha, toca o ombro oposto sem girar o quadril","20 (10 cada)"],
-               ["Ab wheel (ou prancha deslizando no step)","8-10"],
-               ["Ponte de glúteo — deitado, pés no chão, sobe o quadril","15"]] },
-      { id:"farmers-walk-d", name:"Farmer's walk", img:"farmers-walk", sets:3, presc:"3 × 40 m", kg:true, rest:90, min:true,
-        q:"farmers walk caminhada do fazendeiro",
-        setup:"Um halter pesado em cada mão e caminha ereto, sem balançar.",
-        cue:"Se não fez na Sessão A." },
-      { id:"cardio", name:"Cardio zona 2", sets:1, presc:"25-30 min", rest:0,
-        cue:"Ritmo em que dá pra conversar. É a base aeróbica da trilha." },
-      { id:"mobilidade", name:"Mobilidade", sets:1, presc:"5 min", rest:0,
-        cue:"Quadril, torácica, ombro." }
     ]}
 };
 
@@ -502,7 +505,10 @@ const COR = {
   ]
 };
 
-const ORDER = ["A", "B", "C", "D"];
+/* D saiu da fila em 20/08 — dissolvida em finishers dentro de A/B/C (ver plano-academia.md).
+   Se alguém tiver "climb::fila" salvo apontando pro índice 3 (D), o guard abaixo
+   (qi >= 0 && qi < ORDER.length) já invalida e volta pra A sozinho. */
+const ORDER = ["A", "B", "C"];
 const now = new Date();
 const pad = n => String(n).padStart(2, "0");
 const iso = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
@@ -784,6 +790,7 @@ function renderCor() {
 function buildWarmup() {
   const warm = document.createElement("details");
   warm.className = "fold wfold";
+  const items = warmupFor(current);
 
   const sum = document.createElement("summary");
   const ttl = document.createElement("span"); ttl.textContent = "Aquecimento";
@@ -794,12 +801,12 @@ function buildWarmup() {
   const get = () => (state.warm || (state.warm = []));
 
   const paint = () => {
-    const n = get().length, total = WARMUP.items.length;
-    cnt.textContent = `${n} de ${total} · ${WARMUP.t}`;
+    const n = get().length, total = items.length;
+    cnt.textContent = `${n} de ${total} · ~7 min`;
     warm.classList.toggle("done", n >= total);
   };
 
-  WARMUP.items.forEach(([nm, r], i) => {
+  items.forEach(([nm, r], i) => {
     const li = document.createElement("li");
     const b = document.createElement("button");
     b.type = "button"; b.className = "witem";
@@ -889,7 +896,7 @@ function render() {
 
     if (blk.min) head.insertAdjacentHTML("beforeend", `<span class="tag">mínimo</span>`);
     if (blk.opt) head.insertAdjacentHTML("beforeend", `<span class="tag opt">opcional</span>`);
-    if (blk.fin) head.insertAdjacentHTML("beforeend", `<span class="tag opt">finisher · 3 min</span>`);
+    if (blk.fin) head.insertAdjacentHTML("beforeend", `<span class="tag opt">finisher${blk.finT ? " · " + blk.finT : ""}</span>`);
     card.appendChild(head);
 
     const p = document.createElement("p");
@@ -1095,7 +1102,7 @@ function buildLog() {
   }
   const head = lines.length;
   const w = (state.warm || []).length;
-  if (w) lines.push(`Aquecimento — ${w}/${WARMUP.items.length}`);
+  if (w) lines.push(`Aquecimento — ${w}/${warmupFor(current).length}`);
   S.blocks.forEach((blk, bi) => {
     const st = state[blk.id];
     if (!st) return;
