@@ -358,6 +358,7 @@
   </div>
 </div>
 
+<script src="academia-log.js"></script>
 <script>
 "use strict";
 
@@ -445,8 +446,6 @@ const SESSIONS = {
       { id:"ponte-gluteo", name:"Ponte de glúteo", sets:1, presc:"15", rest:45, fin:true, finT:"2 min",
         setup:"Deitado, pés no chão, sobe o quadril.",
         cue:"<b>Finisher, 2 min.</b> Veio da antiga Sessão D — cadeia posterior, complementa o RDL acima." },
-      { id:"cardio-b", name:"Cardio zona 2", sets:1, presc:"20-25 min", rest:0, fin:true,
-        cue:"<b>Veio da antiga Sessão D.</b> Ritmo em que dá pra conversar — é a base aeróbica da trilha, e essa é a sessão de trilha." }
     ]},
 
   C: { name: "Sessão C", short: "C", tag: "Ombro", sub: "Ombro à prova — o antagonista",
@@ -1063,7 +1062,7 @@ function render() {
     : `Voltar pra fila (${SESSIONS[ORDER[qi]].name})`;
 
   document.getElementById("fine").innerHTML = STORAGE_OK
-    ? "Só fato: tempo, exercício, peso, séries&nbsp;×&nbsp;reps. Sem adjetivo e sem nota de qualidade — cola no <b>diario-de-treino</b> e marca <b>bloco: corpo</b> na daily. A fila, o cronômetro e as marcações ficam salvos neste aparelho."
+    ? "Só fato: tempo, exercício, peso, séries&nbsp;×&nbsp;reps. Ao concluir, o iPhone abre o Obsidian por alguns segundos e grava o registro como <b>pendente</b> na entrada de treinos. A fila e a sessão em andamento também ficam salvas neste aparelho."
     : "Só fato: exercício, peso, séries&nbsp;×&nbsp;reps — cola no <b>diario-de-treino</b> e marca <b>bloco: corpo</b> na daily. <b>Atenção:</b> este navegador não está guardando nada — copie o registro antes de fechar a página.";
 
   buildLog();
@@ -1079,6 +1078,23 @@ document.getElementById("adv").addEventListener("click", () => {
     return;
   }
   endSess();
+  buildLog();
+  const completedSession = current;
+  const completedState = state;
+  const completedLog = logEl.value;
+  const startedAt = completedState.t0 || Date.now();
+  const completedAt = new Date(completedState.t1 || Date.now()).toISOString();
+  const inboxId = AcademiaLog.workoutId({ session: completedSession, startedAt });
+  const inboxEntry = AcademiaLog.buildInboxEntry({ id: inboxId, completedAt, log: completedLog });
+  const returnUrl = window.location.protocol === "http:" || window.location.protocol === "https:"
+    ? window.location.href.split("#")[0]
+    : "";
+  const inboxUri = AcademiaLog.buildObsidianAppendUri({
+    vault: "OBSIDIAN",
+    file: "🧠 Fellipe Brain/02 Áreas/CLIMB/treino/entrada-de-treinos.md",
+    content: inboxEntry,
+    returnUrl,
+  });
   if (current === ORDER[qi]) {
     qi = (qi + 1) % ORDER.length;
     store.set("climb::fila", String(qi));
@@ -1088,6 +1104,7 @@ document.getElementById("adv").addEventListener("click", () => {
   stopTimer();
   window.scrollTo(0, 0);
   render();
+  window.location.href = inboxUri;
 });
 
 /* ---- log ---- */
