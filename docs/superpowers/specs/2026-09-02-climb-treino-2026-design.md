@@ -99,10 +99,11 @@ Ao tocar em **Concluí — avançar a fila**:
 
 1. o app encerra o cronômetro e monta o registro;
 2. grava uma cópia numa outbox local antes da chamada de rede;
-3. envia o payload estruturado ao Worker;
-4. após confirmação, remove o item da outbox e avança a fila;
-5. em falha de rede, mantém o item e mostra `Registro pendente de envio`;
-6. na próxima abertura ou conclusão, tenta reenviar a outbox automaticamente.
+3. avança a fila depois que o payload está preservado localmente;
+4. envia o payload estruturado ao Worker;
+5. após confirmação, remove o item da outbox;
+6. em falha de rede, mantém o item e mostra `Registro pendente de envio`;
+7. na próxima abertura ou conclusão, tenta reenviar a outbox automaticamente.
 
 A gravação direta via `obsidian://` será removida. O app nunca perde silenciosamente um
 treino por falta de internet e nunca avança a fila antes de preservar o payload localmente.
