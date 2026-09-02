@@ -351,6 +351,7 @@
       <button type="button" class="btn ghost" id="reset">Zerar marcações</button>
     </div>
     <p class="fine" id="fine"></p>
+    <p class="fine" id="sync-status" role="status" aria-live="polite"></p>
     <p class="fine credit">
       Imagens de execução: <a href="https://github.com/yuhonas/free-exercise-db" target="_blank" rel="noopener noreferrer">free-exercise-db</a>,
       domínio público (The Unlicense).
@@ -519,8 +520,50 @@ catch (e) { STORAGE_OK = false; }
 
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch (e) { return mem[k] ?? null; } },
-  set(k, v) { try { localStorage.setItem(k, v); } catch (e) { mem[k] = v; } }
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) { mem[k] = v; } },
+  getItem(k) { return this.get(k); },
+  setItem(k, v) { this.set(k, v); }
 };
+
+const WORKOUT_API = "https://climb-treino-2026-api.od-worker.workers.dev/v1/workouts";
+const syncStatus = document.getElementById("sync-status");
+let syncInFlight = false;
+
+function paintSyncStatus(message) {
+  syncStatus.textContent = message;
+}
+
+async function sendWorkout(payload) {
+  const response = await fetch(WORKOUT_API, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    keepalive: true
+  });
+  if (!response.ok) return { ok: false };
+  return response.json();
+}
+
+async function syncWorkouts() {
+  if (syncInFlight) return;
+  const before = AcademiaLog.pendingCount(store);
+  if (!before) { paintSyncStatus(""); return; }
+
+  syncInFlight = true;
+  paintSyncStatus(before === 1 ? "Enviando 1 registro…" : `Enviando ${before} registros…`);
+  try {
+    const result = await AcademiaLog.flushOutbox(store, sendWorkout);
+    if (result.pending) {
+      paintSyncStatus(result.pending === 1
+        ? "1 registro pendente de envio — tento de novo automaticamente."
+        : `${result.pending} registros pendentes de envio — tento de novo automaticamente.`);
+    } else {
+      paintSyncStatus(result.sent === 1 ? "Treino registrado." : `${result.sent} treinos registrados.`);
+    }
+  } finally {
+    syncInFlight = false;
+  }
+}
 
 /* fila: persiste entre dias */
 let qi = parseInt(store.get("climb::fila") || "0", 10);
@@ -1062,7 +1105,7 @@ function render() {
     : `Voltar pra fila (${SESSIONS[ORDER[qi]].name})`;
 
   document.getElementById("fine").innerHTML = STORAGE_OK
-    ? "Só fato: tempo, exercício, peso, séries&nbsp;×&nbsp;reps. Ao concluir, o iPhone abre o Obsidian por alguns segundos e grava o registro como <b>pendente</b> na entrada de treinos. A fila e a sessão em andamento também ficam salvas neste aparelho."
+    ? "Só fato: tempo, exercício, peso, séries&nbsp;×&nbsp;reps. Ao concluir, o registro vai para a base do <b>Treino CLIMB 2026</b>. Se a internet falhar, ele fica protegido neste aparelho e tenta de novo automaticamente."
     : "Só fato: exercício, peso, séries&nbsp;×&nbsp;reps — cola no <b>diario-de-treino</b> e marca <b>bloco: corpo</b> na daily. <b>Atenção:</b> este navegador não está guardando nada — copie o registro antes de fechar a página.";
 
   buildLog();
@@ -1082,19 +1125,12 @@ document.getElementById("adv").addEventListener("click", () => {
   const completedSession = current;
   const completedState = state;
   const completedLog = logEl.value;
-  const startedAt = completedState.t0 || Date.now();
-  const completedAt = new Date(completedState.t1 || Date.now()).toISOString();
-  const inboxId = AcademiaLog.workoutId({ session: completedSession, startedAt });
-  const inboxEntry = AcademiaLog.buildInboxEntry({ id: inboxId, completedAt, log: completedLog });
-  const returnUrl = window.location.protocol === "http:" || window.location.protocol === "https:"
-    ? window.location.href.split("#")[0]
-    : "";
-  const inboxUri = AcademiaLog.buildObsidianAppendUri({
-    vault: "OBSIDIAN",
-    file: "🧠 Fellipe Brain/02 Áreas/CLIMB/treino/entrada-de-treinos.md",
-    content: inboxEntry,
-    returnUrl,
+  const payload = AcademiaLog.createWorkoutPayload({
+    session: completedSession,
+    state: completedState,
+    logText: completedLog
   });
+  AcademiaLog.enqueueWorkout(store, payload);
   if (current === ORDER[qi]) {
     qi = (qi + 1) % ORDER.length;
     store.set("climb::fila", String(qi));
@@ -1104,7 +1140,7 @@ document.getElementById("adv").addEventListener("click", () => {
   stopTimer();
   window.scrollTo(0, 0);
   render();
-  window.location.href = inboxUri;
+  syncWorkouts();
 });
 
 /* ---- log ---- */
@@ -1151,4 +1187,6 @@ document.getElementById("reset").addEventListener("click", () => {
 });
 
 render();
+syncWorkouts();
+window.addEventListener("online", syncWorkouts);
 </script>

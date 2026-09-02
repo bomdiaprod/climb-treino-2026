@@ -11,7 +11,7 @@
     {
       "binding": "DB",
       "database_name": "climb-treino-2026-db",
-      "database_id": "local-development",
+      "database_id": "6158e8b3-b750-426f-9b7e-d1ce08776db4",
       "migrations_dir": "migrations"
     }
   ]
