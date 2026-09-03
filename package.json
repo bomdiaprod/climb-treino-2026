@@ -1,0 +1,10 @@
+{
+  "name": "climb-treino-2026",
+  "private": true,
+  "scripts": {
+    "test:client": "node --test test/*.test.js",
+    "test:worker": "npm --prefix worker test",
+    "test": "npm run test:client && npm run test:worker",
+    "check": "npm test && npm --prefix worker run typecheck && npm --prefix worker run deploy:dry"
+  }
+}

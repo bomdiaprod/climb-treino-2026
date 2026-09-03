@@ -98,12 +98,16 @@ uma única tabela. Se abuso real aparecer, Turnstile pode ser acrescentado depoi
 Ao tocar em **Concluí — avançar a fila**:
 
 1. o app encerra o cronômetro e monta o registro;
-2. grava uma cópia numa outbox local antes da chamada de rede;
-3. avança a fila depois que o payload está preservado localmente;
+2. grava uma cópia numa chave local exclusiva daquele ID, evitando sobrescrita entre abas;
+3. relê e confirma a persistência antes de avançar a fila; se a escrita falhar, não avança;
 4. envia o payload estruturado ao Worker;
 5. após confirmação, remove o item da outbox;
 6. em falha de rede, mantém o item e mostra `Registro pendente de envio`;
-7. na próxima abertura ou conclusão, tenta reenviar a outbox automaticamente.
+7. em rejeição permanente, mantém o item e oferece cópia manual para recuperação;
+8. na próxima abertura ou conclusão, tenta reenviar a outbox automaticamente.
+
+O botão `Voltar pra fila`, exibido ao apenas visualizar outra sessão, só navega: ele não
+encerra cronômetro, não cria payload e não grava um treino.
 
 A gravação direta via `obsidian://` será removida. O app nunca perde silenciosamente um
 treino por falta de internet e nunca avança a fila antes de preservar o payload localmente.
