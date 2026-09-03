@@ -348,6 +348,7 @@
     <textarea id="log" spellcheck="false" aria-label="Registro da sessão"></textarea>
     <div class="btns">
       <button type="button" class="btn" id="copy">Copiar registro</button>
+      <button type="button" class="btn ghost" id="copy-pending" hidden>Copiar pendências</button>
       <button type="button" class="btn ghost" id="reset">Zerar marcações</button>
     </div>
     <p class="fine" id="fine"></p>
@@ -520,17 +521,18 @@ catch (e) { STORAGE_OK = false; }
 
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch (e) { return mem[k] ?? null; } },
-  set(k, v) { try { localStorage.setItem(k, v); } catch (e) { mem[k] = v; } },
-  getItem(k) { return this.get(k); },
-  setItem(k, v) { this.set(k, v); }
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) { mem[k] = v; } }
 };
 
 const WORKOUT_API = "https://climb-treino-2026-api.od-worker.workers.dev/v1/workouts";
 const syncStatus = document.getElementById("sync-status");
+const copyPending = document.getElementById("copy-pending");
 let syncInFlight = false;
+let syncAgain = false;
 
-function paintSyncStatus(message) {
+function paintSyncStatus(message, canRecover = false) {
   syncStatus.textContent = message;
+  copyPending.hidden = !canRecover;
 }
 
 async function sendWorkout(payload) {
@@ -540,28 +542,42 @@ async function sendWorkout(payload) {
     body: JSON.stringify(payload),
     keepalive: true
   });
-  if (!response.ok) return { ok: false };
-  return response.json();
+  let body = null;
+  try { body = await response.json(); } catch (e) {}
+  return AcademiaLog.classifyHttpResult(response.status, body);
 }
 
 async function syncWorkouts() {
-  if (syncInFlight) return;
-  const before = AcademiaLog.pendingCount(store);
+  if (!STORAGE_OK) return;
+  if (syncInFlight) { syncAgain = true; return; }
+  let before = 0;
+  try { before = AcademiaLog.pendingCount(localStorage); }
+  catch (e) { paintSyncStatus("Não consegui acessar os registros salvos neste aparelho."); return; }
   if (!before) { paintSyncStatus(""); return; }
 
   syncInFlight = true;
   paintSyncStatus(before === 1 ? "Enviando 1 registro…" : `Enviando ${before} registros…`);
   try {
-    const result = await AcademiaLog.flushOutbox(store, sendWorkout);
-    if (result.pending) {
+    const result = await AcademiaLog.flushOutbox(localStorage, sendWorkout);
+    if (result.rejected) {
+      paintSyncStatus(result.rejected === 1
+        ? "1 registro foi recusado pelo servidor — copie as pendências para recuperar."
+        : `${result.rejected} registros foram recusados pelo servidor — copie as pendências para recuperar.`, true);
+    } else if (result.pending) {
       paintSyncStatus(result.pending === 1
-        ? "1 registro pendente de envio — tento de novo automaticamente."
-        : `${result.pending} registros pendentes de envio — tento de novo automaticamente.`);
+        ? "1 registro aguarda internet — tento de novo automaticamente."
+        : `${result.pending} registros aguardam internet — tento de novo automaticamente.`, true);
     } else {
       paintSyncStatus(result.sent === 1 ? "Treino registrado." : `${result.sent} treinos registrados.`);
     }
+  } catch (e) {
+    paintSyncStatus("Não consegui acessar os registros salvos neste aparelho.");
   } finally {
     syncInFlight = false;
+    if (syncAgain) {
+      syncAgain = false;
+      setTimeout(syncWorkouts, 0);
+    }
   }
 }
 
@@ -1120,6 +1136,14 @@ document.getElementById("adv").addEventListener("click", () => {
     render();
     return;
   }
+  if (!AcademiaLog.isQueuedSession(current, ORDER[qi])) {
+    current = ORDER[qi];
+    state = load(current);
+    stopTimer();
+    window.scrollTo(0, 0);
+    render();
+    return;
+  }
   endSess();
   buildLog();
   const completedSession = current;
@@ -1130,11 +1154,15 @@ document.getElementById("adv").addEventListener("click", () => {
     state: completedState,
     logText: completedLog
   });
-  AcademiaLog.enqueueWorkout(store, payload);
-  if (current === ORDER[qi]) {
-    qi = (qi + 1) % ORDER.length;
-    store.set("climb::fila", String(qi));
+  try {
+    if (!STORAGE_OK) throw new Error("durable storage unavailable");
+    AcademiaLog.enqueueWorkout(localStorage, payload);
+  } catch (e) {
+    paintSyncStatus("Não consegui salvar este treino. A fila não avançou — copie o registro acima antes de sair.");
+    return;
   }
+  qi = (qi + 1) % ORDER.length;
+  store.set("climb::fila", String(qi));
   current = ORDER[qi];
   state = load(current);
   stopTimer();
@@ -1182,6 +1210,20 @@ document.getElementById("copy").addEventListener("click", async () => {
   setTimeout(() => { b.textContent = "Copiar registro"; }, 2200);
 });
 
+copyPending.addEventListener("click", async () => {
+  let pending = [];
+  try { pending = AcademiaLog.listPending(localStorage); } catch (e) {}
+  const text = pending.map(item => [
+    item.id,
+    item.logText,
+    `Estado: ${JSON.stringify(item.state)}`
+  ].join("\n")).join("\n\n---\n\n");
+  let ok = false;
+  try { await navigator.clipboard.writeText(text); ok = true; } catch (e) {}
+  copyPending.textContent = ok ? "Pendências copiadas" : "Não copiou — use o registro acima";
+  setTimeout(() => { copyPending.textContent = "Copiar pendências"; }, 2200);
+});
+
 document.getElementById("reset").addEventListener("click", () => {
   state = {}; save(current, state); stopTimer(); render();
 });
@@ -1189,4 +1231,7 @@ document.getElementById("reset").addEventListener("click", () => {
 render();
 syncWorkouts();
 window.addEventListener("online", syncWorkouts);
+window.addEventListener("storage", event => {
+  if (event.key && event.key.startsWith(`${AcademiaLog.OUTBOX_KEY}::`)) syncWorkouts();
+});
 </script>
