@@ -40,8 +40,7 @@ test("durable enqueue succeeds before the queue advances", () => {
   assert.match(handler.slice(failureReturn, advance), /return;/);
 });
 
-test("the app exposes recovery for queued records and classifies HTTP failures", () => {
-  assert.match(html, /id="copy-pending"/);
-  assert.match(html, /AcademiaLog\.classifyHttpResult\(response\.status, body\)/);
-  assert.match(html, /AcademiaLog\.listPending\(localStorage\)/);
+test("workout recording does not ask the user to copy logs or pending records", () => {
+  assert.doesNotMatch(html, /id="(?:copy|copy-pending|log)"/);
+  assert.doesNotMatch(html, /navigator\.clipboard|execCommand\("copy"\)/);
 });

@@ -1,4 +1,7 @@
+<!doctype html>
+<html lang="pt-BR">
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Treino CLIMB 2026</title>
 <style>
   :root {
@@ -9,7 +12,7 @@
     --line-soft:   #DDE3E1;
     --ink:         #141918;
     --ink-2:       #4C5754;
-    --ink-3:       #75807D;
+    --ink-3:       #606D68;
     --accent:      #0D6C60;
     --accent-ink:  #FFFFFF;
     --accent-soft: #D5E6E2;
@@ -44,7 +47,14 @@
     font-family: var(--f-ui); font-size: 16px; line-height: 1.5;
     -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent;
   }
-  .wrap { max-width: 640px; margin: 0 auto; padding: 0 14px 110px; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 max(14px, env(safe-area-inset-left)) calc(110px + env(safe-area-inset-bottom)); }
+  [hidden] { display: none !important; }
+  button, summary { touch-action: manipulation; }
+  button:active { filter: brightness(.92); }
+  .sync-status { font-size: 13px; color: var(--ink-2); margin: 0 0 12px; }
+  .sync-status:empty { display: none; }
+  .sync-status[data-state="saved"] { color: var(--accent); }
+  .sync-status[data-state="pending"], .sync-status[data-state="error"] { color: var(--amber); }
 
   .top { background: var(--ground); border-bottom: 1px solid var(--line-soft); padding: 14px 0 0; }
   .eyebrow { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-3); font-weight: 650; }
@@ -97,6 +107,7 @@
   .snum.idle { color: var(--ink-3); }
   .slbl { font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
           color: var(--ink-3); font-weight: 650; line-height: 1.35; }
+  .slbl:empty { display: none; }
 
   .timer {
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
@@ -165,16 +176,26 @@
           border-left: 3px solid var(--line); border-radius: 3px;
           padding: 13px 14px 14px; box-shadow: var(--shadow); transition: border-left-color .15s; }
   .card.full { border-left-color: var(--accent); }
+  .card.closed { padding-top: 4px; padding-bottom: 4px; box-shadow: none; background: var(--surface-2); }
+  .card.closed > :not(.chead), .card.closed .tag { display: none; }
+  .card.closed .chead { margin-bottom: 0; align-items: center; }
+  .card.closed .cname { padding-top: 0; color: var(--ink-2); text-decoration: none; }
+  .card.closed .echk { margin-top: 0; }
+  .card.closed .chead { animation: settled .18s ease-out; }
+  @keyframes settled { from { opacity: .65; } to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
   .card.skipped { border-left-color: var(--amber); }
   .card.skipped .echk[aria-pressed="true"] .box { background: var(--amber); border-color: var(--amber); }
   .slabel .skip { text-transform: none; letter-spacing: 0; font-size: 11.5px;
                   font-weight: 600; color: var(--amber); }
 
-  .chead { display: flex; align-items: flex-start; gap: 9px; margin-bottom: 3px; }
+  .chead { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 3px; flex-wrap: wrap; }
   .idx { font-family: var(--f-data); font-size: 12px; color: var(--ink-3);
          font-variant-numeric: tabular-nums; margin-right: 7px; font-weight: 500; }
   .cname { font-size: 16px; font-weight: 680; line-height: 1.35; letter-spacing: -.008em;
-           flex: 1; text-wrap: balance; padding-top: 8px; }
+           flex: 1; min-width: 0; text-wrap: balance; padding-top: 8px; }
 
   .echk {
     flex: none; width: 44px; height: 44px; margin: -4px 0 0 -8px;
@@ -189,6 +210,7 @@
   }
   .echk[aria-pressed="true"] .box { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   .echk[aria-pressed="true"] ~ .cname { color: var(--ink-3); text-decoration: line-through; }
+  .card.closed .echk[aria-pressed="true"] ~ .cname { color: var(--ink-2); text-decoration: none; }
   .echk:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; border-radius: 3px; }
 
   .lastline {
@@ -202,18 +224,17 @@
     font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
   }
   .kg input.sug { border-color: var(--accent); color: var(--accent); }
-  .tag { font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700;
+  .tag { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; font-weight: 700;
          border: 1px solid var(--accent); color: var(--accent); border-radius: 2px;
          padding: 3px 5px; white-space: nowrap; margin-top: 2px; }
   .tag.opt { border-color: var(--ink-3); color: var(--ink-3); }
 
   .presc { font-family: var(--f-data); font-size: 13px; color: var(--ink);
            font-variant-numeric: tabular-nums; margin: 0 0 2px 28px; }
-  .cue { font-size: 13px; color: var(--ink-2); margin: 4px 0 0 28px; line-height: 1.45; }
+  .cue { font-size: 14px; color: var(--ink-2); margin: 6px 0 0 28px; line-height: 1.5; }
   .cue.warn { color: var(--amber); font-weight: 550; }
   .cue.setup { color: var(--ink); }
-  .cue.setup b { color: var(--accent); font-size: 11px; letter-spacing: .1em;
-                 text-transform: uppercase; font-weight: 700; }
+  .cue.setup b { font-weight: 650; }
   .howto {
     display: inline-flex; align-items: center; min-height: 44px;
     margin: 2px 0 0 28px; padding: 0 2px;
@@ -260,7 +281,7 @@
   .slabel .hint { text-transform: none; letter-spacing: 0; font-size: 11.5px;
                   font-weight: 500; color: var(--ink-3); }
   .row { display: flex; align-items: center; gap: 8px; margin: 0 0 0 28px; flex-wrap: wrap; }
-  .dots { display: flex; gap: 7px; flex-wrap: wrap; }
+  .dots { display: flex; gap: 8px; flex-wrap: wrap; }
   .dot { width: 44px; height: 44px; border-radius: 3px; border: 1.5px solid var(--line);
          background: var(--surface-2); color: var(--ink-3); font-family: var(--f-data);
          font-size: 13px; font-weight: 600; cursor: pointer;
@@ -272,7 +293,7 @@
   .kg { display: flex; align-items: center; gap: 6px; margin-left: auto; }
   .kg input { width: 78px; min-height: 44px; text-align: right; background: var(--surface-2);
               border: 1.5px solid var(--line); border-radius: 3px; color: var(--ink);
-              font-family: var(--f-data); font-size: 15px; font-weight: 600;
+              font-family: var(--f-data); font-size: 16px; font-weight: 600;
               font-variant-numeric: tabular-nums; padding: 0 8px; }
   .kg input::placeholder { color: var(--ink-3); font-weight: 400; }
   .kg input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
@@ -288,22 +309,24 @@
   .advance .btn { width: 100%; }
 
   .foot { margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--line-soft); }
-  h2 { font-size: 13px; letter-spacing: .13em; text-transform: uppercase; color: var(--ink-3);
-       font-weight: 700; margin: 0 0 10px; }
-  textarea { width: 100%; min-height: 140px; resize: vertical; background: var(--surface);
-             border: 1px solid var(--line); border-radius: 3px; color: var(--ink);
-             font-family: var(--f-data); font-size: 13px; line-height: 1.65; padding: 12px;
-             font-variant-numeric: tabular-nums; }
-  textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .btns { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
   .btn { flex: 1; min-height: 48px; min-width: 130px; background: var(--accent);
          color: var(--accent-ink); border: 1px solid var(--accent); border-radius: 3px;
          font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
   .btn.ghost { background: transparent; color: var(--ink-2); border-color: var(--line); font-weight: 600; }
   .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn:disabled { opacity: .65; cursor: wait; }
+  .reset { display: block; padding: 0; min-height: 44px; background: none; border: 0;
+           color: var(--ink-2); font: inherit; font-size: 13px; cursor: pointer; text-decoration: underline; }
+  .reset:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
   .fine { font-size: 12.5px; color: var(--ink-3); margin-top: 14px; line-height: 1.55; }
   .fine.credit { margin-top: 8px; font-size: 11.5px; }
   .fine.credit a { color: var(--ink-2); }
+  @media (max-width: 430px) {
+    .chead .tag { margin-left: 44px; margin-top: -2px; }
+    .chead .cname { flex-basis: calc(100% - 44px); }
+    .sess { flex-wrap: wrap; }
+    .slbl { letter-spacing: 0; }
+  }
 </style>
 
 <div class="wrap">
@@ -320,6 +343,7 @@
       <span class="snum idle" id="snum" role="timer" aria-live="off">0:00</span>
       <span class="slbl" id="slbl">cronômetro da sessão</span>
     </div>
+    <p class="sync-status" id="sync-status" role="status" aria-live="polite" aria-atomic="true"></p>
   </div>
 
   <div class="timer" id="timer" role="status" aria-live="polite">
@@ -344,15 +368,8 @@
   </div>
 
   <div class="foot">
-    <h2>Registro pro diário</h2>
-    <textarea id="log" spellcheck="false" aria-label="Registro da sessão"></textarea>
-    <div class="btns">
-      <button type="button" class="btn" id="copy">Copiar registro</button>
-      <button type="button" class="btn ghost" id="copy-pending" hidden>Copiar pendências</button>
-      <button type="button" class="btn ghost" id="reset">Zerar marcações</button>
-    </div>
+    <button type="button" class="reset" id="reset">Reiniciar sessão</button>
     <p class="fine" id="fine"></p>
-    <p class="fine" id="sync-status" role="status" aria-live="polite"></p>
     <p class="fine credit">
       Imagens de execução: <a href="https://github.com/yuhonas/free-exercise-db" target="_blank" rel="noopener noreferrer">free-exercise-db</a>,
       domínio público (The Unlicense).
@@ -385,124 +402,115 @@ const WARMUP_BY = {
 function warmupFor(s) { return WARMUP_BASE.concat(WARMUP_BY[s] || []); }
 
 const RISCO = [
-  "<b>Escalou num dia livre? Escala bem abaixo do limite.</b> Volume e técnica. O corpo vai dizer que aguenta um grau acima — a polia não tem opinião até romper.",
-  "<b>Nada de hangboard neste bloco.</b> A Fase 0 continua valendo pro dedo, mesmo com o resto do corpo em outro patamar.",
-  "<b>Farmer's walk e pendura em barra grossa, mão aberta</b> — é o quanto de dedo este bloco carrega, e é de propósito.",
-  "<b>Em outubro você volta forte e com dedo destreinado.</b> É o cenário clássico de lesão de escalador voltando. A rampa se planeja lá."
+  "<b>Escalada nos dias livres:</b> fique bem abaixo do limite e foque na técnica.",
+  "<b>Sem hangboard neste bloco.</b>",
+  "<b>Pegada:</b> farmer's walk e suspensão em barra grossa, com mão aberta.",
+  "<b>Retorno à escalada em outubro:</b> planeje a progressão de carga para os dedos."
 ];
 
 const SESSIONS = {
-  A: { name: "Sessão A", short: "A", tag: "Puxar", sub: "Puxar — o que te sobe na parede",
-    note: "A mais importante das três: é daqui que sai a escalada. <b>Seis itens + finisher.</b> Duas puxadas de verdade, o ombro protegido e a pegada carregada — sem terceira e quarta versão da mesma puxada.",
+  A: { name: "Sessão A", short: "A", tag: "Puxar", sub: "Puxada e pegada",
+    note: "6 exercícios + finalização de core.",
     blocks: [
       { id:"barra-fixa", name:"Barra fixa", img:"barra-fixa", sets:4, presc:"4 × 5-8", kg:true, rest:150, min:true,
         kgLabel:"lastro", q:"barra fixa pegada pronada",
-        setup:"É o <b>teu próprio peso</b>. Livre e sem lastro: deixa o campo vazio — o que progride são as <b>repetições</b>. Só quando as 4×8 saírem limpas é que entra lastro (cinto ou halter entre os pés) e o número vem pra cá.",
-        cue:"É o movimento da escalada com o corpo inteiro pendurado — o mais transferível que a academia tem. Pegada pronada aberta.",
-        alt:"<b>Puxada alta frente</b>, 4 × 8-10 até o peito — quando a barra estiver ocupada ou o braço não subir mais. Mesma vaga, não item a mais." },
+        setup:"Pegada aberta, palmas para a frente. Suba sem balanço.",
+        cue:"Sem lastro, deixe a carga vazia. Acrescente peso só após completar 4 × 8 com boa execução.",
+        alt:"<b>Puxada alta à frente</b>, 4 × 8-10 até o peito." },
       { id:"remada-curvada", name:"Remada curvada com barra", img:"remada-curvada", sets:4, presc:"4 × 8-10", presc2:"4 × 5-8", kg:true, rest:120, min:true,
-        cue:"A puxada horizontal — o vetor que a barra fixa não dá e que você usa em toda travessia.",
-        alt:"<b>Remada máquina</b> (mesmas séries) ou <b>serrote com halter</b>, 3 × 10 cada lado, tronco paralelo sem torcer." },
+        cue:"Incline o tronco e puxe a barra até o abdômen, sem balançar.",
+        alt:"<b>Remada máquina</b> (mesmas séries) ou <b>serrote com halter</b>, 3 × 10 por lado, sem girar o tronco." },
       { id:"face-pull", name:"Face pull na polia", img:"face-pull", sets:3, presc:"3 × 15", kg:true, rest:60,
         q:"face pull polia",
-        setup:"Corda na polia alta, na altura do rosto. Puxa a corda em direção à testa <b>abrindo os cotovelos pros lados</b>, como quem vai mostrar bíceps.",
-        cue:"Não pula. Escalada fecha o ombro pra frente; este é o que abre de volta." },
+        setup:"Polia na altura do rosto. Puxe a corda até a testa, abrindo os cotovelos para os lados." },
       { id:"rosca-martelo", name:"Rosca martelo", img:"rosca-martelo", sets:3, presc:"3 × 10", kg:true, rest:60,
-        cue:"A única rosca da sessão. Braquial — o que protege o cotovelo, a lesão de escalador mais chata de curar." },
+        cue:"Palmas voltadas uma para a outra. Suba os halteres com os cotovelos junto ao corpo." },
       { id:"farmers-walk", name:"Farmer's walk com halteres", img:"farmers-walk", sets:4, presc:"4 × 30-40 m", kg:true, rest:90,
         q:"farmers walk caminhada do fazendeiro",
-        setup:"Um halter pesado em cada mão e <b>caminha ereto</b>, ombros pra trás, sem balançar. Só isso — o difícil é segurar até o fim.",
-        cue:"<b>Pegada.</b> Mão aberta, sem crimp: é exatamente o quanto de dedo este bloco pode carregar. Enrolar uma toalha na alça engrossa a pegada e aproxima ainda mais da parede." },
+        setup:"Um halter em cada mão. Caminhe ereto, com os ombros para trás e sem balançar.",
+        cue:"Use pegada aberta, sem arquear os dedos. Para engrossar a pegada, envolva a alça com uma toalha." },
       { id:"elev-pernas", name:"Elevação de pernas pendurado", img:"elev-pernas", sets:3, presc:"3 × 10", rest:60,
         q:"elevação de pernas na barra fixa",
-        setup:"Pendurado na barra, sobe as pernas retas até a altura do quadril e desce <b>devagar</b>, sem balançar.",
-        cue:"<b>Pendurado é metade do exercício</b> — é tensão de corpo com os pés no ar, que é o que a parede cobra. Deitado só se ainda não sai limpo." },
+        setup:"Pendurado na barra, eleve as pernas retas até o quadril. Desça devagar, sem balanço.",
+        alt:"Faça deitado se ainda não consegue controlar o movimento pendurado." },
       { id:"core-finisher", name:"Hollow body + ab wheel", sets:2, presc:"30s + 8-10", rest:60, fin:true, finT:"3 min",
-        setup:"Hollow body: deitado de costas, lombar colada no chão, braços e pernas esticados e levantados, 30s. Ab wheel: rola pra frente e volta (ou prancha deslizando no step), 8-10.",
-        cue:"<b>Finisher, 3 min.</b> Veio da antiga Sessão D — mesma família de tensão de tronco da elevação de pernas acima, só que sem pendurar." }
+        setup:"<b>Hollow:</b> lombar no chão, braços e pernas esticados e elevados, 30s. <b>Ab wheel:</b> role para a frente e volte, 8-10 vezes.",
+        alt:"No lugar da ab wheel, prancha deslizando no step." }
     ]},
 
-  B: { name: "Sessão B", short: "B", tag: "Pernas", sub: "Pernas & trilha — subir e, sobretudo, descer",
-    note: "Trilha é ladeira longa, descida excêntrica e panturrilha destruída. <b>Seis itens</b> desenhados pra isso, não pra coxa grande.",
+  B: { name: "Sessão B", short: "B", tag: "Pernas", sub: "Pernas e trilha",
+    note: "6 exercícios + finalização de glúteo.",
     blocks: [
       { id:"agachamento", name:"Agachamento livre (ou hack / smith)", img:"agachamento", sets:4, presc:"4 × 6-8", kg:true, step:5, rest:180, min:true,
-        cue:"A base que te levanta do degrau alto com mochila nas costas. Profundidade antes de carga.",
-        alt:"<b>Leg press</b>, 3 × 10-12, nos dias de lombar pedindo folga. É troca, não sequência — os dois no mesmo treino era a mesma coxa duas vezes." },
+        cue:"Desça com controle. Priorize a amplitude antes de aumentar a carga.",
+        alt:"<b>Leg press</b>, 3 × 10-12." },
       { id:"rdl", name:"Levantamento terra romeno (RDL)", img:"rdl", sets:3, presc:"3 × 8-10", presc2:"3 × 5-8", kg:true, step:5, rest:150, min:true,
         q:"levantamento terra romeno stiff",
-        setup:"Peso na frente das coxas, joelho quase reto. <b>Empurra o quadril pra trás</b> descendo o peso rente à perna até esticar o posterior, e volta. Não é agachar.",
-        cue:"Cadeia posterior — a que segura a mochila na subida. Coluna neutra, tem que sentir o posterior de coxa." },
+        setup:"Joelhos levemente dobrados, coluna neutra. Leve o quadril para trás e desça o peso rente às pernas até alongar a parte de trás da coxa. Volte." },
       { id:"step-up", name:"Step-up em banco alto com halteres", img:"step-up", sets:3, presc:"3 × 10 cada perna", kg:true, step:5, rest:90,
         q:"step up no banco com halteres",
-        setup:"Halter em cada mão, sobe num banco alto <b>com uma perna só</b> e desce controlado. A perna de baixo não empurra.",
-        cue:"O exercício mais específico de trilha que existe: uma perna de cada vez, igual degrau de raiz." },
-      { id:"step-down", name:"Step-down — descida controlada do banco", sets:3, presc:"3 × 8 cada perna", kg:true, step:5, rest:90,
+        setup:"Um halter em cada mão. Suba no banco com uma perna e desça com controle. Evite impulso da perna de baixo." },
+      { id:"step-down", name:"Step-down do banco", sets:3, presc:"3 × 8 cada perna", kg:true, step:5, rest:90,
         q:"step down descida controlada excentrico",
-        setup:"Em pé no banco (mais baixo que o do step-up), <b>desce devagar</b> com uma perna só até o calcanhar tocar o chão, e volta. 3 segundos na descida.",
-        cue:"<b>Entrou no lugar da cadeira flexora em 18/08.</b> Descida de trilha é excêntrico de quadríceps e joelho — é aqui que a trilha machuca, e nenhuma máquina sentada treina isso.",
-        alt:"<b>Cadeira flexora</b>, 3 × 12, se o joelho reclamar da descida controlada." },
+        setup:"Use um banco mais baixo que no step-up. Apoiado em uma perna, desça em 3s até o outro calcanhar tocar o chão. Volte.",
+        alt:"<b>Cadeira flexora</b>, 3 × 12." },
       { id:"panturrilha", name:"Panturrilha em pé", img:"panturrilha", sets:4, presc:"4 × 15", kg:true, step:5, rest:60,
-        cue:"Trilha acaba com panturrilha. Amplitude cheia embaixo." },
+        cue:"Eleve os calcanhares e desça com controle, usando a amplitude completa." },
       { id:"prancha-lateral", name:"Prancha lateral", img:"prancha-lateral", sets:3, presc:"3 × 30-40s cada lado", rest:60,
-        cue:"Quadril firme com mochila nas costas e pé em terreno torto." },
+        cue:"Apoie o antebraço e mantenha ombros, quadril e pés alinhados." },
       { id:"ponte-gluteo", name:"Ponte de glúteo", sets:1, presc:"15", rest:45, fin:true, finT:"2 min",
-        setup:"Deitado, pés no chão, sobe o quadril.",
-        cue:"<b>Finisher, 2 min.</b> Veio da antiga Sessão D — cadeia posterior, complementa o RDL acima." },
+        setup:"Deitado, pés no chão. Eleve o quadril contraindo os glúteos e desça com controle." },
     ]},
 
-  C: { name: "Sessão C", short: "C", tag: "Ombro", sub: "Ombro à prova — o antagonista",
-    note: "Não é dia de peito: é a sessão que <b>mantém teu ombro escalando</b>. Escalada fecha o ombro pra frente; aqui ele abre, gira e estabiliza. <b>Seis itens + 2 finishers</b> — o terceiro peito e o tríceps isolado saíram em 18/08.",
+  C: { name: "Sessão C", short: "C", tag: "Ombro", sub: "Empurrar e estabilizar",
+    note: "6 exercícios + finalizações de core e antebraço.",
     blocks: [
       { id:"supino-reto", name:"Supino reto com halteres", img:"supino-reto", sets:4, presc:"4 × 8-10", presc2:"4 × 5-8", kg:true, rest:150, min:true,
-        cue:"O antagonista direto de tudo que você puxa na Sessão A. Halteres, não barra: cada ombro faz o próprio caminho.",
-        alt:"<b>Supino inclinado</b> ou <b>crucifixo na máquina</b>, 3 × 10-12 — alterna entre uma C e outra se quiser o ângulo alto." },
-      { id:"desenvolvimento", name:"Desenvolvimento com halteres, sentado", img:"desenvolvimento", sets:4, presc:"4 × 8-10", presc2:"4 × 5-8", kg:true, rest:150, min:true,
-        cue:"Força acima da cabeça — o braço esticado que sustenta agarra alta e faz topo de bloco." },
-      { id:"dips", name:"Paralelas / dips (assistida se precisar)", img:"dips", sets:3, presc:"3 × 8-10", kg:true, rest:120,
+        cue:"Pés firmes no chão. Desça os halteres ao lado do peito e empurre para cima com controle.",
+        alt:"<b>Supino inclinado</b> ou <b>crucifixo na máquina</b>, 3 × 10-12." },
+      { id:"desenvolvimento", name:"Desenvolvimento sentado com halteres", img:"desenvolvimento", sets:4, presc:"4 × 8-10", presc2:"4 × 5-8", kg:true, rest:150, min:true,
+        cue:"Sente com o tronco firme. Empurre os halteres acima da cabeça, sem arquear a lombar." },
+      { id:"dips", name:"Paralelas / dips", img:"dips", sets:3, presc:"3 × 8-10", kg:true, rest:120,
         q:"mergulho paralelas dips",
-        setup:"Nas barras paralelas, corpo suspenso nos braços. Desce dobrando o cotovelo até o braço fazer 90° e sobe. Tem máquina assistida se ainda não sai livre.",
-        cue:"Peito baixo <b>+ tríceps</b> — é por isso que o tríceps na corda saiu da lista. Sem jogar o ombro à frente.",
-        alt:"<b>Tríceps na corda</b>, 3 × 12, quando as paralelas estiverem ocupadas." },
+        setup:"Desça até dobrar os cotovelos a 90° e suba, sem jogar os ombros para a frente. Use a máquina assistida se precisar.",
+        alt:"<b>Tríceps na corda</b>, 3 × 12." },
       { id:"elev-lateral", name:"Elevação lateral", img:"elev-lateral", sets:3, presc:"3 × 12-15", kg:true, rest:60,
-        cue:"Deltoide medial — o que segura o úmero no lugar quando o braço abre pro lado numa agarra distante." },
-      { id:"rot-externa", name:"Rotação externa na polia baixa, cotovelo a 90°", img:"rot-externa", sets:3, presc:"3 × 15 cada", kg:true, rest:60,
+        cue:"Eleve os braços para os lados com os cotovelos levemente dobrados, sem balanço." },
+      { id:"rot-externa", name:"Rotação externa na polia baixa", img:"rot-externa", sets:3, presc:"3 × 15 cada", kg:true, rest:60,
         q:"rotação externa de ombro na polia",
-        setup:"De lado pra polia. <b>Cotovelo colado na cintura</b>, dobrado a 90°, gira só o antebraço pra fora puxando o cabo. O cotovelo não sai do lugar.",
-        cue:"Manguito rotador. Carga ridícula de leve, de propósito — este não é pra ficar forte, é pra não romper." },
+        setup:"De lado para a polia, cotovelo junto à cintura e dobrado a 90°. Gire o antebraço para fora, sem mover o cotovelo. Use carga leve." },
       { id:"pallof", name:"Pallof press na polia", img:"pallof", sets:3, presc:"3 × 10 cada lado", kg:true, rest:60,
         q:"pallof press",
-        setup:"De lado pra polia, alça na altura do peito com as duas mãos. <b>Estende os braços à frente e segura</b> sem deixar o tronco girar. O trabalho é não girar.",
-        cue:"Anti-rotação — é o core que a escalada usa de verdade, quando um pé sai e o corpo quer abrir a porta." },
+        setup:"De lado para a polia, segure a alça no peito com as duas mãos. Estenda os braços à frente sem girar o tronco." },
       { id:"prancha-ombro", name:"Prancha com toque no ombro", sets:1, presc:"20 (10 cada)", rest:45, fin:true, finT:"2 min",
-        setup:"Na prancha, toca o ombro oposto sem girar o quadril.",
-        cue:"<b>Finisher, 2 min.</b> Veio da antiga Sessão D — mesma família anti-rotação do pallof press acima." },
-      { id:"antebraco", name:"Extensão de dedo c/ elástico + rosca de punho invertida", sets:2, presc:"2 × 15 cada", rest:45, fin:true, finT:"3 min",
-        cue:"<b>Finisher, 3 min.</b> Anti-lesão de antebraço: o extensor é o músculo que escalador nunca treina e que segura o cotovelo. Sempre no fim." }
+        setup:"Na prancha, alterne o toque no ombro oposto, mantendo o quadril firme." },
+      { id:"antebraco", name:"Extensão de dedos + rosca de punho invertida", sets:2, presc:"2 × 15 cada", rest:45, fin:true, finT:"3 min",
+        setup:"<b>Dedos:</b> abra contra o elástico. <b>Punhos:</b> com os antebraços apoiados e as palmas para baixo, eleve e abaixe as mãos." }
     ]}
 };
 
 const COR = {
   name: "Bloco de cor", short: "COR", tag: "Ofício",
-  sub: "A fila do ofício",
-  note: "Você disse: <em>tenho que fazer, só não sei em que momento</em>. Então não tem noite marcada — tem fila, igual ao treino. Abriu brecha e não é dia de academia, abre o próximo passo.",
-  min: "Mínimo: <strong>25 min com o Resolve aberto</strong>. Abriu e mexeu = passo cumprido.",
+  sub: "Prática de colorização",
+  note: "Nos dias sem academia, avance para o próximo passo.",
+  min: "Mínimo: <strong>25 min de prática no Resolve</strong>.",
   steps: [
     { n:"Conform no Resolve", t:"40 min",
-      d:"As duas câmeras na timeline, IDT por clipe, ODT Rec.709. Escolher os planos que entram nos 60-90s. <b>Não graduar nada ainda.</b>" },
+      d:"Monte as duas câmeras na timeline, com IDT por clipe e ODT Rec.709. Selecione os planos para 60-90s, sem graduar ainda." },
     { n:"Fechar os dois TBD", t:"25 min",
-      d:"O IDT da câmera log e o pivot da Timeline Color Space. Anotar no workflow pra não redescobrir depois." },
+      d:"Defina o IDT da câmera log e o pivot da Timeline Color Space. Registre no workflow." },
     { n:"Referência na tela", t:"25 min",
-      d:"Os 3 stills de referência abertos ao lado da timeline. <b>É o ponto fixo externo</b> — sem ele a régua sobe junto com a entrega e o look nunca fecha." },
+      d:"Abra os 3 stills de referência ao lado da timeline." },
     { n:"BAL — balanço e exposição", t:"40 min",
-      d:"Todos os planos, só balanço e exposição. Scopes pra <b>diagnosticar antes</b> de mexer, que é o que você já faz bem." },
+      d:"Ajuste balanço e exposição de todos os planos. Confira os scopes antes de mexer." },
     { n:"ADJ — contraste e saturação", t:"40 min",
-      d:"Ainda sem look. Só a base ficando consistente entre as duas câmeras." },
+      d:"Iguale contraste e saturação entre as duas câmeras, ainda sem look." },
     { n:"SEC — secundárias", t:"40 min",
-      d:"Pele e céu, o que a cena pedir. Uma de cada vez, sem empilhar." },
+      d:"Ajuste pele, céu e outras áreas conforme a cena, uma por vez." },
     { n:"LOOK — o look", t:"40 min",
-      d:"Agora sim, contra a referência aberta ao lado. <b>Bateu a ref = suficiente</b> (P7). Não é relaxar padrão, é ter padrão verificável." },
+      d:"Construa o look comparando com a referência. Encerre quando chegar ao resultado previsto." },
     { n:"Passada final + export", t:"40 min",
-      d:"O look do primeiro ao último plano, e exporta. Fim da peça." }
+      d:"Revise a consistência do primeiro ao último plano e exporte." }
   ]
 };
 
@@ -526,52 +534,82 @@ const store = {
 
 const WORKOUT_API = "https://climb-treino-2026-api.od-worker.workers.dev/v1/workouts";
 const syncStatus = document.getElementById("sync-status");
-const copyPending = document.getElementById("copy-pending");
 let syncInFlight = false;
 let syncAgain = false;
+let syncTimer = null;
+let retryDelay = 5000;
+let hasSynced = false;
+let completionError = "";
 
-function paintSyncStatus(message, canRecover = false) {
-  syncStatus.textContent = message;
-  copyPending.hidden = !canRecover;
+function paintSyncStatus(message, status = "pending") {
+  syncStatus.textContent = completionError || message;
+  syncStatus.dataset.state = completionError ? "error" : status;
+}
+
+function scheduleSync() {
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(syncWorkouts, retryDelay);
+  retryDelay = Math.min(retryDelay * 2, 60000);
 }
 
 async function sendWorkout(payload) {
-  const response = await fetch(WORKOUT_API, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-    keepalive: true
-  });
-  let body = null;
-  try { body = await response.json(); } catch (e) {}
-  return AcademiaLog.classifyHttpResult(response.status, body);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+  try {
+    const response = await fetch(WORKOUT_API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      keepalive: true,
+      signal: controller.signal
+    });
+    let body = null;
+    try { body = await response.json(); } catch (e) {}
+    const result = AcademiaLog.classifyHttpResult(response.status, body);
+    return result.ok && result.id !== payload.id ? { ok: false, retryable: true } : result;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 async function syncWorkouts() {
-  if (!STORAGE_OK) return;
   if (syncInFlight) { syncAgain = true; return; }
+  clearTimeout(syncTimer);
   let before = 0;
   try { before = AcademiaLog.pendingCount(localStorage); }
-  catch (e) { paintSyncStatus("Não consegui acessar os registros salvos neste aparelho."); return; }
-  if (!before) { paintSyncStatus(""); return; }
+  catch (e) {
+    paintSyncStatus("Armazenamento indisponível. Tentando acessar seus registros…", "error");
+    scheduleSync();
+    return;
+  }
+  if (!before) {
+    retryDelay = 5000;
+    if (hasSynced) paintSyncStatus("Treinos salvos na base.", "saved");
+    return;
+  }
+  if (!navigator.onLine) {
+    paintSyncStatus("Aguardando conexão. Envio automático ao reconectar.");
+    scheduleSync();
+    return;
+  }
 
   syncInFlight = true;
-  paintSyncStatus(before === 1 ? "Enviando 1 registro…" : `Enviando ${before} registros…`);
+  paintSyncStatus(before === 1 ? "Salvando treino…" : `Salvando ${before} treinos…`, "sending");
   try {
     const result = await AcademiaLog.flushOutbox(localStorage, sendWorkout);
-    if (result.rejected) {
-      paintSyncStatus(result.rejected === 1
-        ? "1 registro foi recusado pelo servidor — copie as pendências para recuperar."
-        : `${result.rejected} registros foram recusados pelo servidor — copie as pendências para recuperar.`, true);
-    } else if (result.pending) {
-      paintSyncStatus(result.pending === 1
-        ? "1 registro aguarda internet — tento de novo automaticamente."
-        : `${result.pending} registros aguardam internet — tento de novo automaticamente.`, true);
+    if (result.sent) hasSynced = true;
+    if (result.pending) {
+      paintSyncStatus(navigator.onLine
+        ? "Envio pendente. Registro preservado; tentando novamente automaticamente."
+        : "Aguardando conexão. Envio automático ao reconectar.");
+      scheduleSync();
     } else {
-      paintSyncStatus(result.sent === 1 ? "Treino registrado." : `${result.sent} treinos registrados.`);
+      retryDelay = 5000;
+      paintSyncStatus("Treinos salvos na base.", "saved");
     }
   } catch (e) {
-    paintSyncStatus("Não consegui acessar os registros salvos neste aparelho.");
+    paintSyncStatus("Não foi possível acessar os registros. Tentando novamente…", "error");
+    scheduleSync();
   } finally {
     syncInFlight = false;
     if (syncAgain) {
@@ -712,9 +750,9 @@ function paintSess() {
     sBtn.textContent = "Iniciar treino"; sBtn.classList.remove("on");
     sNum.textContent = "0:00"; sNum.classList.add("idle");
     if (other) sLbl.innerHTML = `<b>${SESSIONS[other.s].name}</b> rodando · ${dur(Date.now() - other.t0)}`;
-    else sLbl.textContent = "cronômetro da sessão";
+    else sLbl.textContent = "";
   } else if (!state.t1) {
-    sBtn.textContent = "Encerrar"; sBtn.classList.add("on");
+    sBtn.textContent = "Parar tempo"; sBtn.classList.add("on");
     sNum.textContent = dur(Date.now() - state.t0); sNum.classList.remove("idle");
     sLbl.textContent = `em treino desde ${hm(state.t0)}`;
   } else {
@@ -785,6 +823,8 @@ function markTabs() {
 }
 
 function renderCor() {
+  document.getElementById("reset").hidden = true;
+  document.querySelector(".rest").hidden = true;
   document.getElementById("title").firstChild.textContent = COR.name;
   document.getElementById("subtitle").textContent = COR.sub;
 
@@ -837,12 +877,7 @@ function renderCor() {
   const adv = document.getElementById("adv");
   adv.textContent = done ? "Recomeçar a fila do ofício" : "Fiz esse — próximo passo";
 
-  document.getElementById("fine").innerHTML =
-    "O passo cumprido vira uma linha factual na daily (<b>bloco: ofício</b>) e o marco datado vai pra <b>🎨 Trilha — Cor</b>. Sem adjetivo e sem nota.";
-
-  logEl.value = done
-    ? "Peça de cor — todos os passos concluídos"
-    : `Ofício/cor — ${pad(now.getDate())}/${pad(now.getMonth() + 1)}\nPasso ${qcor + 1}/${COR.steps.length}: ${COR.steps[qcor].n}`;
+  document.getElementById("fine").textContent = "Progresso do ofício salvo neste aparelho.";
 }
 
 function buildWarmup() {
@@ -887,6 +922,8 @@ function buildWarmup() {
 
 function render() {
   if (current === "COR") return renderCor();
+  document.getElementById("reset").hidden = false;
+  document.querySelector(".rest").hidden = false;
   const S = SESSIONS[current];
   document.getElementById("title").firstChild.textContent = S.name;
   document.getElementById("subtitle").textContent = S.sub;
@@ -906,27 +943,18 @@ function render() {
 
   main.appendChild(buildWarmup());
 
-  const n1 = document.createElement("p");
-  n1.className = "note"; n1.innerHTML = S.note;
-  main.appendChild(n1);
-
   const n2 = document.createElement("p");
-  n2.className = "note warn";
-  n2.innerHTML = isB2
-    ? "<strong>Bloco 2:</strong> os dois primeiros descem pra <strong>5-8 reps</strong> com mais carga. Acessórios ficam 8-12."
-    : "<strong>Bloco 1:</strong> topo da faixa, <strong>2-3 reps na reserva</strong>. O trabalho é achar a carga e anotar, não bater recorde.";
+  n2.className = "note";
+  n2.innerHTML = S.note + "<br>" + (isB2
+    ? "<strong>Bloco 2:</strong> siga as séries e repetições de cada exercício."
+    : "<strong>Bloco 1:</strong> termine com <strong>2–3 repetições na reserva</strong>.");
   main.appendChild(n2);
-
-  const n3 = document.createElement("p");
-  n3.className = "note";
-  n3.innerHTML = "<strong>Seis exercícios, ~45 min.</strong> Quer botar um? Tira outro — a lista não cresce. O que saiu da poda de 18/08 virou <strong>troca</strong> dentro do próprio card.<br>" +
-    "Aquecimento + os <strong>2 primeiros</strong> = <strong>Sessão Mínima Viável</strong>. A fila anda igual — o mínimo não é dívida.<br>" +
-    "A caixa <strong>encerra</strong> o exercício e te tira dele; quem registra o que foi feito são as <strong>séries</strong>. Encerrar sem série marcada vira <strong>não feito</strong>, e isso é registro legítimo.";
-  main.appendChild(n3);
 
   const risk = document.createElement("details");
   risk.className = "fold risk";
-  risk.innerHTML = `<summary>⚠ O risco deste bloco <span class="t">dedo x puxada</span></summary><ul>` +
+  risk.innerHTML = `<summary>Orientações <span class="t">ver</span></summary><ul>` +
+    `<li>Com pouco tempo: aquecimento + os <b>2 primeiros exercícios</b>.</li>` +
+    `<li>Marque as séries feitas e use o check do título para encerrar. Sem séries marcadas, o exercício fica como <b>não feito</b>.</li>` +
     RISCO.map(r => `<li>${r}</li>`).join("") + `</ul>`;
   main.appendChild(risk);
 
@@ -969,7 +997,7 @@ function render() {
     }
     if (blk.setup) {
       const s = document.createElement("p"); s.className = "cue setup";
-      s.innerHTML = "<b>Como é:</b> " + blk.setup; card.appendChild(s);
+      s.innerHTML = blk.setup; card.appendChild(s);
     }
     if (blk.cue) {
       const c = document.createElement("p"); c.className = "cue"; c.innerHTML = blk.cue; card.appendChild(c);
@@ -985,13 +1013,13 @@ function render() {
         const det = document.createElement("details");
         det.className = "shot";
         det.innerHTML =
-          `<summary>▣ ver execução</summary>` +
+          `<summary>Ver execução</summary>` +
           `<div class="frames">` +
           `<figure><img loading="lazy" decoding="async" src="img/${blk.img}-0.jpg" alt="${blk.name} — posição inicial"><figcaption>início</figcaption></figure>` +
           `<figure><img loading="lazy" decoding="async" src="img/${blk.img}-1.jpg" alt="${blk.name} — posição final"><figcaption>fim</figcaption></figure>` +
           `</div>` +
           `<a class="howto" target="_blank" rel="noopener noreferrer" ` +
-          `href="https://www.youtube.com/results?search_query=${encodeURIComponent(q + " execução correta")}">▶ ver em vídeo</a>`;
+          `href="https://www.youtube.com/results?search_query=${encodeURIComponent(q + " execução correta")}">Ver em vídeo</a>`;
         card.appendChild(det);
       } else {
         const a = document.createElement("a");
@@ -999,7 +1027,7 @@ function render() {
         a.href = "https://www.youtube.com/results?search_query=" +
                  encodeURIComponent(q + " execução correta");
         a.target = "_blank"; a.rel = "noopener noreferrer";
-        a.textContent = "▶ ver execução em vídeo";
+        a.textContent = "Ver execução em vídeo";
         a.setAttribute("aria-label", `Ver vídeo de execução — ${q}`);
         card.appendChild(a);
       }
@@ -1024,11 +1052,15 @@ function render() {
       const st = st0(), n = st.d.length, todas = n >= blk.sets, pulou = !!st.done && n === 0;
       dotEls.forEach((d, i) => d.setAttribute("aria-pressed", st.d.includes(i) ? "true" : "false"));
       slab.innerHTML = `${unitName} <b>${n} de ${blk.sets}</b>` +
-        (pulou ? ` <span class="skip">— encerrado sem fazer</span>`
-               : (n === 0 ? ` <span class="hint">— toca uma a cada ${blk.unit || "série"} feita</span>` : ""));
+        (pulou ? ` <span class="skip">— não feito</span>` : "");
       card.classList.toggle("full", (!!st.done || todas) && !pulou);
       card.classList.toggle("skipped", pulou);
+      card.classList.toggle("closed", !!st.done);
       chk.setAttribute("aria-pressed", st.done ? "true" : "false");
+      chk.setAttribute("aria-label", st.done
+        ? `Reabrir ${blk.name} — ${n} de ${blk.sets} ${unitName}`
+        : `Encerrar ${blk.name} e recolher`);
+      chk.firstElementChild.textContent = pulou ? "−" : "✓";
       if (fromUser) noteHist(current, blk.id, st.kg, n, blk.sets);
       save(current, state); buildLog();
     };
@@ -1120,9 +1152,7 @@ function render() {
     ? `Concluí — ir pra ${SESSIONS[ORDER[(qi + 1) % ORDER.length]].name}`
     : `Voltar pra fila (${SESSIONS[ORDER[qi]].name})`;
 
-  document.getElementById("fine").innerHTML = STORAGE_OK
-    ? "Só fato: tempo, exercício, peso, séries&nbsp;×&nbsp;reps. Ao concluir, o registro vai para a base do <b>Treino CLIMB 2026</b>. Se a internet falhar, ele fica protegido neste aparelho e tenta de novo automaticamente."
-    : "Só fato: exercício, peso, séries&nbsp;×&nbsp;reps — cola no <b>diario-de-treino</b> e marca <b>bloco: corpo</b> na daily. <b>Atenção:</b> este navegador não está guardando nada — copie o registro antes de fechar a página.";
+  document.getElementById("fine").textContent = "Ao concluir, seu treino é salvo automaticamente.";
 
   buildLog();
 }
@@ -1148,7 +1178,7 @@ document.getElementById("adv").addEventListener("click", () => {
   buildLog();
   const completedSession = current;
   const completedState = state;
-  const completedLog = logEl.value;
+  const completedLog = logText;
   const payload = AcademiaLog.createWorkoutPayload({
     session: completedSession,
     state: completedState,
@@ -1158,9 +1188,12 @@ document.getElementById("adv").addEventListener("click", () => {
     if (!STORAGE_OK) throw new Error("durable storage unavailable");
     AcademiaLog.enqueueWorkout(localStorage, payload);
   } catch (e) {
-    paintSyncStatus("Não consegui salvar este treino. A fila não avançou — copie o registro acima antes de sair.");
+    completionError = "Não consegui salvar este treino. A fila não avançou. Mantenha a página aberta e tente concluir novamente.";
+    paintSyncStatus(completionError, "error");
+    syncStatus.scrollIntoView({ block: "center" });
     return;
   }
+  completionError = "";
   qi = (qi + 1) % ORDER.length;
   store.set("climb::fila", String(qi));
   current = ORDER[qi];
@@ -1172,7 +1205,7 @@ document.getElementById("adv").addEventListener("click", () => {
 });
 
 /* ---- log ---- */
-const logEl = document.getElementById("log");
+let logText = "";
 function buildLog() {
   const S = SESSIONS[current];
   const lines = [`${S.name} (${S.tag}) — ${pad(now.getDate())}/${pad(now.getMonth() + 1)}`];
@@ -1197,41 +1230,24 @@ function buildLog() {
     lines.push(`${blk.name}${kg} — ${n}/${blk.sets}${unit}`);
   });
   if (lines.length === head) lines.push("(marque as séries pra montar o registro)");
-  logEl.value = lines.join("\n");
+  logText = lines.join("\n");
 }
 
-document.getElementById("copy").addEventListener("click", async () => {
-  const b = document.getElementById("copy");
-  logEl.focus(); logEl.select();
-  let ok = false;
-  try { await navigator.clipboard.writeText(logEl.value); ok = true; }
-  catch (e) { try { ok = document.execCommand("copy"); } catch (e2) { ok = false; } }
-  b.textContent = ok ? "Copiado" : "Selecionado — copie";
-  setTimeout(() => { b.textContent = "Copiar registro"; }, 2200);
-});
-
-copyPending.addEventListener("click", async () => {
-  let pending = [];
-  try { pending = AcademiaLog.listPending(localStorage); } catch (e) {}
-  const text = pending.map(item => [
-    item.id,
-    item.logText,
-    `Estado: ${JSON.stringify(item.state)}`
-  ].join("\n")).join("\n\n---\n\n");
-  let ok = false;
-  try { await navigator.clipboard.writeText(text); ok = true; } catch (e) {}
-  copyPending.textContent = ok ? "Pendências copiadas" : "Não copiou — use o registro acima";
-  setTimeout(() => { copyPending.textContent = "Copiar pendências"; }, 2200);
-});
-
 document.getElementById("reset").addEventListener("click", () => {
+  if (current === "COR") return;
+  if (!window.confirm("Reiniciar esta sessão? As marcações e o cronômetro serão zerados. Treinos já registrados serão mantidos.")) return;
   state = {}; save(current, state); stopTimer(); render();
 });
 
 render();
 syncWorkouts();
 window.addEventListener("online", syncWorkouts);
+window.addEventListener("pageshow", syncWorkouts);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") syncWorkouts();
+});
 window.addEventListener("storage", event => {
   if (event.key && event.key.startsWith(`${AcademiaLog.OUTBOX_KEY}::`)) syncWorkouts();
 });
 </script>
+</html>
